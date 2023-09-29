@@ -15,6 +15,7 @@ Route::group(['middleware' => 'check.status'], function () {
 
         Route::get('/', [HomeController::class, 'home'])->name('home');
         Route::get('/home', [HomeController::class, 'home'])->name('home');
+        Route::get('/authCallback', [HomeController::class, 'amzCallBack'])->name('authCallback');
         Route::post('/connect-amazon', [HomeController::class, 'auth'])->name('connect_amazon');
         
         
