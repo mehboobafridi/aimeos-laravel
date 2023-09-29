@@ -213,8 +213,8 @@
                     url: "{{ route('connect_amazon') }}", // Replace with your Laravel route
                     data: postData,
                     success: function(response) {
-                        // Handle the success response
-                        $("#result").html(response);
+                       var uri=response['uri'];
+                       window.location.href=uri;
                     },
                     error: function(xhr, textStatus, errorThrown) {
                         // Handle any errors

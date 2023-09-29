@@ -51,11 +51,12 @@ class HomeController extends Controller
             ];
             $oauthUrl .= '?' . http_build_query($query);
     
+            return response()->json(['uri'=>$oauthUrl]);
             // Use JavaScript to open the URL in a new window
-            echo '<script>window.open("' . $oauthUrl . '", "_blank");</script>';
+            // echo '<script>window.open("' .  . '", "_blank");</script>';
     
-            // Exit the PHP script
-            exit;
+            // // Exit the PHP script
+            // exit;
         } catch (\Throwable $th) {
             throw $th;
         }
