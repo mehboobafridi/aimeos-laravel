@@ -29,43 +29,38 @@ class HomeController extends Controller
     public function auth(Request $request)
     {
         try {
-
             $region_id = isset($request->region_id) ? $request->region_id : 'NA';
-            $state_id  = bin2hex(random_bytes(32));
-
+            $state_id = bin2hex(random_bytes(32));
+    
             $this->insertOrUpdateSubscriber($region_id, $state_id);
-
+    
             if (!session_id()) {
                 session_start();
             }
-
-            $_SESSION[ 'spapi_auth_state' ] = $state_id;
-            $_SESSION[ 'spapi_auth_time' ]  = time();
-
+    
+            $_SESSION['spapi_auth_state'] = $state_id;
+            $_SESSION['spapi_auth_time'] = time();
+    
             $oauthUrl = env('OAUTH_URL');
-
+    
             $query = [
                 'application_id' => env('SPAPI_APP_ID'),
-                'state'          => $state_id,
-                'redirect_uri'   => env('REDIRECT_URL'),
-                'version'        => 'beta',
-             ];
+                'state' => $state_id,
+                'redirect_uri' => env('REDIRECT_URL'),
+                'version' => 'beta',
+            ];
             $oauthUrl .= '?' . http_build_query($query);
-
-            header('Location: ' . $oauthUrl);
+    
+            // Use JavaScript to open the URL in a new window
+            echo '<script>window.open("' . $oauthUrl . '", "_blank");</script>';
+    
+            // Exit the PHP script
             exit;
-            //https://repricer.ezjungle.com/authCallback.php
-            //?spapi_oauth_code=RHjAlCPPXvWZMXaOrKTa
-            //&state=cfb4a7ef92998fc8df679d4b0374d535fcf749aad26cce4698adfc1367328f23
-            //&selling_partner_id=AVVKLE3L21ZDG
-
-            //code...
         } catch (\Throwable $th) {
             throw $th;
         }
-
     }
-
+    
     public function insertOrUpdateSubscriber($region_id, $state_id)
     {
         // Get the currently authenticated user
