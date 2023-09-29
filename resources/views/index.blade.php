@@ -214,7 +214,9 @@
                     data: postData,
                     success: function(response) {
                        var uri=response['uri'];
-                       window.location.href=uri;
+ 
+                       var newTab = window.open(uri, '_blank');
+                        newTab.focus();
                     },
                     error: function(xhr, textStatus, errorThrown) {
                         // Handle any errors
