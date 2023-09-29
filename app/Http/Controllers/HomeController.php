@@ -6,7 +6,7 @@ use App\Models\Region;
 use App\Models\Subscriber;
 use Auth;
 use Illuminate\Http\Request;
-
+use SimpleXMLElement;
 class HomeController extends Controller
 {
     public function home(Request $request)
@@ -131,11 +131,13 @@ class HomeController extends Controller
                  die();
              }
 
+             $lwc_id = env('AMZ_CLIENT_ID');
+             $lwc_sec = env('AMZ_CLIENT_SECRET');
              
             try {
 
                 //now passing the auth code for token exchange. for this we need to pass auth code, lwa client id, and lwa client secret.
-                $token = $this->get_auth_code_to_access_token($spapi_oauth_code, $selling_partner_id, env('AMZ_LWA_CLIENT_ID'), env('AMZ_LWA_CLIENT_SECRET'));
+                $token = $this->get_auth_code_to_access_token($spapi_oauth_code, $selling_partner_id, $lwc_id, $lwc_sec);
 
                 if ($token === false) {
                     echo ('Token not found.');
@@ -148,8 +150,8 @@ class HomeController extends Controller
 
                     Subscriber::Where("state_id", $state_id)->update(
                         array(
-                            "access_token"     => $token[ 'access_token' ],
-                            "refresh_token"    => $token[ 'refresh_token' ],
+                            "access_token"     => $token['access_token' ],
+                            "refresh_token"    => $token['refresh_token' ],
                             "updated_at" => date('Y-m-d H:i:s'),
                             "amz_seller_id" => $selling_partner_id,
                         )
@@ -228,7 +230,7 @@ class HomeController extends Controller
                 'code'          => $spapi_oauth_code,
                 'client_id'     => $lwa_client,
                 'client_secret' => $lwa_secret,
-                // 'version' => 'beta',
+                'version' => 'beta',
              ]));
 
             $output = curl_exec($ch);
@@ -245,18 +247,12 @@ class HomeController extends Controller
             $refresh_token = $body[ 'refresh_token' ];
             $expires_in    = $body[ 'expires_in' ];
 
-            $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><tokens></tokens>');
-            $xml->addChild('access_token', $access_token);
-            $xml->addChild('refresh_token', $refresh_token);
-            $xml->addChild('expires_in', $expires_in);
-            $xml->addChild('selling_partner_id', $selling_partner_id);
-            $xml->asXML(public_path() . '\\token.xml');
+           
 
             return [ 'refresh_token' => $refresh_token, 'access_token' => $access_token, 'selling_partner_id' => $selling_partner_id ];
 
-        } catch (\Exception $e) {
-            print_r($e);
-            exit;
+        } catch (\Throwable $e) {
+            Throw $e;
         }
 
     }
