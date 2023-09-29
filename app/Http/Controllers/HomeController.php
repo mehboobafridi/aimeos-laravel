@@ -46,7 +46,7 @@ class HomeController extends Controller
             $query = [
                 'application_id' => env('SPAPI_APP_ID'),
                 'state' => $state_id,
-                'redirect_uri' => env('REDIRECT_URL'),
+                // 'redirect_uri' => env('REDIRECT_URL'),
                 'version' => 'beta',
             ];
             $oauthUrl .= '?' . http_build_query($query);
