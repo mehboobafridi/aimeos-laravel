@@ -14,6 +14,11 @@ return [
             "endpoint" => Endpoint::NA,
             'roleArn' => env('AWS_ROLE_ARN'),
 	],
+	'login_url' => [
+            "NA" => env('AMZ_LWA_CLIENT_ID'),
+            "EU" => env('AMZ_LWA_CLIENT_SECRET'),
+            "FE" => env('AMZ_LWA_REFRESH_TOKEN'),
+	],
 	'financial' => [
 		'shipment' => 'shipment',
 		'adjustment' => 'adjustment',

@@ -1,11 +1,10 @@
 <?php
 
-use App\Models\ShippingAddress;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\Auth\UsersManagmentController;
-
+use App\Http\Controllers\SubscriberController;
 
 Auth::routes();
 
@@ -15,10 +14,14 @@ Route::group(['middleware' => 'check.status'], function () {
 
         Route::get('/', [HomeController::class, 'home'])->name('home');
         Route::get('/home', [HomeController::class, 'home'])->name('home');
-        Route::get('/authCallback', [HomeController::class, 'amzCallBack'])->name('authCallback');
-        Route::post('/connect-amazon', [HomeController::class, 'auth'])->name('connect_amazon');
+        Route::get('/authCallback', [SubscriberController::class, 'amzCallBack'])->name('authCallback');
+        Route::post('/connect-amazon', [SubscriberController::class, 'auth'])->name('connect_amazon');
+        Route::get('/get-data', [SubscriberController::class,'getData'])->name('get.data');
         
+        Route::delete('subscribed/{id}', [SubscriberController::class,'destroy'])->name('subscribed.destroy');
+
         
+
 
       
 

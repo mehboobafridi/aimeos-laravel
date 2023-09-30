@@ -18,7 +18,8 @@
         "laravelcollective/html": "^6.2",
         "spatie/array-to-xml": "^2.16",
         "spatie/laravel-permission": "^5.10",
-        "symfony/dom-crawler": "^5.4"
+        "symfony/dom-crawler": "^5.4",
+        "yajra/laravel-datatables-oracle": "^9.21"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
