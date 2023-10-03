@@ -2,7 +2,7 @@
 namespace App;
  
 return [
-      'SPAPI_APP_ID' => env('SPAPI_APP_ID'),
+      'AMZ_LWA_APP_ID' => env('AMZ_LWA_APP_ID'),
       'AWS_ACCESS_KEY_ID' => env('AWS_ACCESS_KEY_ID'),
       'AWS_SECRET_ACCESS_KEY' => env('AWS_SECRET_ACCESS_KEY'),
       'AWS_ROLE_ARN' => env('AWS_ROLE_ARN'),

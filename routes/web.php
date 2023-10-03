@@ -21,18 +21,12 @@ Route::group(['middleware' => 'check.status'], function () {
         Route::delete('subscribed/{id}', [SubscriberController::class,'destroy'])->name('subscribed.destroy');
 
         
-
-
-      
-
         Route::group(['middleware' => ['permission:users-management']], function () {
             Route::resource('permissions', PermissionsController::class);
             Route::resource('users-management', UsersManagmentController::class);
         });
 
         
-
-
     });
 });
 

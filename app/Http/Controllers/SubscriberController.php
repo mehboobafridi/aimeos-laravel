@@ -122,7 +122,7 @@ class SubscriberController extends Controller
             $_SESSION['spapi_auth_time'] = time();
     
             $query = [
-                'application_id' => env('SPAPI_APP_ID'),
+                'application_id' => env('AMZ_LWA_APP_ID'),
                 'state' => $state_id,
                 // 'redirect_uri' => env('REDIRECT_URL'),
                 'version' => 'beta',
