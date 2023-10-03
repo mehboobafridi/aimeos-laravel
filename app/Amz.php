@@ -9,8 +9,6 @@ return [
       'AMZ_LWA_CLIENT_ID' => env('AMZ_LWA_CLIENT_ID'),
       'AMZ_LWA_CLIENT_SECRET' => env('AMZ_LWA_CLIENT_SECRET'),
       'AMZ_LWA_REFRESH_TOKEN' => env('AMZ_LWA_REFRESH_TOKEN'),
-      'OAUTH_URL' => env('OAUTH_URL'),
-      'REDIRECT_URL' => env('REDIRECT_URL')
       ];
 
  
