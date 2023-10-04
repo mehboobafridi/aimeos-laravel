@@ -28,13 +28,13 @@ if (!function_exists('get_label')) {
 }
 
 if (!function_exists('expired_amazon_token')) {
-    function expired_amazon_token()
+    function expired_amazon_token($user_id)
     {
 
         try {
 
             // Retrieve the token record from the database
-            $token = Token::first();
+            $token = Token::where('user_id', $user_id)->first();
 
             // Check if the token record exists
             if (!$token) {
@@ -147,12 +147,12 @@ if (!function_exists('request_amazon_new_token')) {
 
 
 if (!function_exists('get_amazon_token')) {
-    function get_amazon_token()
+    function get_amazon_token($user_id)
     {
 
         try {
 
-            if (expired_amazon_token() === true) {
+            if (expired_amazon_token($user_id) === true) {
                 // If the token needs to be refreshed, get a new one
                 $newToken = request_amazon_new_token();
                 if (!$newToken) {
@@ -162,14 +162,16 @@ if (!function_exists('get_amazon_token')) {
 
                 // Create a new token record
                 $token = new Token();
+                $token->user_id = $user_id;
                 $token->access_token = $newToken['access_token'];
                 $token->refresh_token = $newToken['refresh_token'];
+                $token->expires_in = $newToken['expires_in'];
                 $token->save();
 
                 // Return token object
                 return $newToken;
             } else {
-                return Token::first()->toArray();
+                return Token::where('user_id', $user_id)->first()->toArray();
             }
 
 
@@ -185,12 +187,12 @@ if (!function_exists('get_amazon_token')) {
 
 
 if (!function_exists('get_amazon_config')) {
-    function get_amazon_config()
+    function get_amazon_config($user_id)
     {
 
         try {
 
-            $tokens = get_amazon_token();
+            $tokens = get_amazon_token($user_id);
             if(isset($tokens) && is_array($tokens) && count($tokens) > 0) {
                 $access_token = $tokens['access_token'];
                 $refresh_token = $tokens['refresh_token'];

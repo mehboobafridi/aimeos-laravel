@@ -5,6 +5,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\Auth\UsersManagmentController;
 use App\Http\Controllers\SubscriberController;
+use App\Http\Controllers\DownloadOrdersController;
 
 Auth::routes();
 
@@ -30,6 +31,8 @@ Route::group(['middleware' => 'check.status'], function () {
     });
 });
 
+Route::get('/download_orders', [DownloadOrdersController::class, 'download_orders'])->name('download_orders');
+
 
 Route::get('/token', function () {
     return csrf_token();
@@ -41,3 +44,6 @@ Route::get('/clear-cache', function () {
     return redirect()->back()->with('hardReload', true);
 });
 
+// Route::get('/test', function(){
+//     
+// });

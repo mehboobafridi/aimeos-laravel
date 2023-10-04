@@ -6,8 +6,8 @@ return [
 	'seller' => env('AMZ_SELLER'),
 
 	'config' => [
-            "lwaClientId" => env('AMZ_LWA_CLIENT_ID'),
-            "lwaClientSecret" => env('AMZ_LWA_CLIENT_SECRET'),
+            "lwaClientId" => env('AMZ_CLIENT_ID'),
+            "lwaClientSecret" => env('AMZ_CLIENT_SECRET'),
             "lwaRefreshToken" => env('AMZ_LWA_REFRESH_TOKEN'),
             "awsAccessKeyId" => env('AWS_ACCESS_KEY_ID'),
             "awsSecretAccessKey" => env('AWS_SECRET_ACCESS_KEY'),
@@ -15,8 +15,8 @@ return [
             'roleArn' => env('AWS_ROLE_ARN'),
 	],
 	'login_url' => [
-            "NA" => env('AMZ_LWA_CLIENT_ID'),
-            "EU" => env('AMZ_LWA_CLIENT_SECRET'),
+            "NA" => env('AMZ_CLIENT_ID'),
+            "EU" => env('AMZ_CLIENT_SECRET'),
             "FE" => env('AMZ_LWA_REFRESH_TOKEN'),
 	],
 	'financial' => [
