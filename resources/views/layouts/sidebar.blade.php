@@ -44,6 +44,18 @@
                     </li>
                 @endcan
 
+                <li>
+                    <a href="#" class="has-arrow waves-effect">
+                        <i class="ri-profile-line"></i>
+                        <span>Orders</span>
+                    </a>
+                    <ul class="sub-menu" aria-expanded="false">
+						<li><a href="{{route('ViewNewOrders')}}" >New</a></li>
+						<li><a href="{{route('ViewCanceledOrders')}}" >Canceled</a></li>
+						<li><a href="{{route('ViewShippedOrders')}}" >Shipped</a></li>
+                    </ul>
+                </li>
+
 
 
 

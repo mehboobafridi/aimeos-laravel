@@ -6,6 +6,7 @@ use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\Auth\UsersManagmentController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\DownloadOrdersController;
+use App\Http\Controllers\ShowOrdersController;
 
 Auth::routes();
 
@@ -26,6 +27,24 @@ Route::group(['middleware' => 'check.status'], function () {
             Route::resource('permissions', PermissionsController::class);
             Route::resource('users-management', UsersManagmentController::class);
         });
+
+        //show new orders
+        // Route::group(['middleware' => ['permission:all-orders']], function () {
+            Route::view('/new-orders', 'orders.new')->name('ViewNewOrders');
+        // });
+
+        //show canceled orders
+        // Route::group(['middleware' => ['permission:all-orders']], function () {
+            Route::view('/canceled-orders', 'orders.canceled')->name('ViewCanceledOrders');
+        // });
+
+        //show shipped orders
+        // Route::group(['middleware' => ['permission:all-orders']], function () {
+            Route::view('/shipped-orders', 'orders.shipped')->name('ViewShippedOrders');
+        // });
+
+        //load amazon orders to datatable on orders pages views
+        Route::post('get_amazon_orders', [ShowOrdersController::class, 'load_amazon_orders'])->name('load_amazon_orders');
 
         
     });

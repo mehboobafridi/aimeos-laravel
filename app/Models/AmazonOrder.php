@@ -69,4 +69,9 @@ class AmazonOrder extends Model
         'is_replacement_order' => 'boolean',
         'is_sold_by_ab' => 'boolean',
     ];
+
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class, 'amazon_order_id', 'amazon_order_id');
+    }
 }
