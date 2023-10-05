@@ -52,7 +52,7 @@ class OrdersController extends Controller
             ini_set('memory_limit', '1024M');
             set_time_limit(0);
 
-            $config = get_amazon_config($user_id);
+            $config = get_amazon_config();
 
             $lastNumDaysOrders = Carbon::now()->subDays(config('amz.feed_type.order.interval'))->format('Y-m-d\TH:i:s.u\Z');
 
@@ -308,7 +308,7 @@ class OrdersController extends Controller
             } elseif($page_order_status == 'Unshipped') {
                 try {
                     // $whereStatment = "(amazon_orders.order_status='Unshipped') OR amazon_orders.order_status='PartiallyShipped' ";
-                    $whereStatment = '(amazon_orders.order_status="Unshipped" AND amazon_orders.user_id = "'.$user_id.'")';
+                    $whereStatment = '(amazon_orders.order_status="Unshipped" OR amazon_orders.order_status="PartiallyShipped") AND (amazon_orders.user_id = "'.$user_id.'")';
 
                 } catch (\Throwable $th) {
                     throw $th;
