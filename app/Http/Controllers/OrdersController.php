@@ -661,6 +661,8 @@ class OrdersController extends Controller
                 'is_actually_shipped' => 1, 
                 'order_status' => 'Shipped',
             ]);
+
+            return response()->json(['message' => 'Order marked as shipped succefully!']);
             
         } catch (\Throwable $th) {
             return response()->json([

@@ -561,7 +561,7 @@
                 data: data,
                 beforeSend: function() {
                     $("#create-label").modal("hide");
-                    fire_sweet_alert("Resques submitted, please wait for the response");
+                    fire_sweet_alert("Resquest submitted, please wait for the response");
                 },
                 success: function(response) {
                     $("#create-label").modal("hide");
