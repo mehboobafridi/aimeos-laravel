@@ -47,9 +47,6 @@
 
         <div class="card card-body border-0 shadow table-wrapper table-responsive">
 
-            {{-- FILTERS AND ORDER DATE RADIO BUTTONS COMPONENT --}}
-            {{-- @include('orders.filters_components.fields') --}}
-
             <div class="table-responsive">
 
                 <table class="table table-hover nowrap table-bordered " width="100%" id="myTable">
@@ -63,7 +60,7 @@
                             <th width="05%" class="border-gray-200">State</th>
                             <th width="20%" class="border-gray-200">Customer option</th>
                             <th width="10%" class="border-gray-200">Order Status</th>
-                            <th width="13%" class="border-gray-200">Action</th>
+                            {{-- <th width="13%" class="border-gray-200">Action</th> --}}
                         </tr>
                     </thead>
                 </table>
@@ -72,21 +69,9 @@
 
         </div>
 
-
-
-
-
-
-
-
-        {{-- create manaul label modal --}}
-        {{-- @include('orders.confirm_ship_components.modal_popup') --}}
-
-
+        
         {{-- create order details modal --}}
-        {{-- @include('orders.order_details_comp.modal_popup') --}}
-
-
+        @include('orders.order_details_components.details-modal')
 
     </div>
 
@@ -318,7 +303,7 @@
 
                             var ship_date_formatted = shipDate.format("MMM D, YYYY");
                             var orderStatus =
-                                '<div class="badge font-size-12" style="color:#ffff; background-color: rgb(251 0 45 / 63%);">' +
+                                '<div class="badge font-size-12" style="color:#ffff; background-color: rgb(0 0 0 / 75%);">' +
                                 data.OrderStatus + '</div>';
 
                             var warning_message = '';
@@ -335,12 +320,12 @@
                     },
 
 
-                    {
-                        data: "PurchaseLabel",
-                        render: function(t, a, e) {
-                            return '<div class="button-container"><button type="button" onclick="create_manual_label(\'' + e.amazon_order_id + '\',1);" title="Confirm Shipment" style="cursor: pointer;" class="btn btn-sm btn-warning text-dark rounded-pill border border-secondary">Confirm Shipment</button></div>'
-                        }
-                    },
+                    // {
+                    //     data: "PurchaseLabel",
+                    //     render: function(t, a, e) {
+                    //         return '<div class="button-container"><button type="button" onclick="create_manual_label(\'' + e.amazon_order_id + '\',1);" title="Confirm Shipment" style="cursor: pointer;" class="btn btn-sm btn-warning text-dark rounded-pill border border-secondary">Confirm Shipment</button></div>'
+                    //     }
+                    // },
                 ],
                 drawCallback: function(t) {
                     var a = dataTable.page.info();
@@ -369,14 +354,12 @@
                 test_table.fnPageChange(page_number);
 
             });
-
-
+            
             //============ end of datatable ===========
-
-
-
         });
-
+        
+        //inclue order-details JavaScript functions
+        @include('orders.order_details_components.details-js')
 
         function insertLineBreaks(str, lettersPerLine) {
             let result = '';

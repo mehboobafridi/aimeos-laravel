@@ -785,11 +785,12 @@ body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu > ul ul {
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active {
-  color: #5664d2 !important;
+  /* color: #5664d2 !important; */
+  color: #1727a5 !important;
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active i {
-  color: #5664d2 !important;
+  color: #1727a5 !important;
 }
 
 body[data-sidebar=dark] .mm-active {

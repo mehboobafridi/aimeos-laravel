@@ -5,8 +5,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\Auth\UsersManagmentController;
 use App\Http\Controllers\SubscriberController;
-use App\Http\Controllers\DownloadOrdersController;
-use App\Http\Controllers\ShowOrdersController;
+use App\Http\Controllers\OrdersController;
 
 Auth::routes();
 
@@ -44,13 +43,23 @@ Route::group(['middleware' => 'check.status'], function () {
         // });
 
         //load amazon orders to datatable on orders pages views
-        Route::post('get_amazon_orders', [ShowOrdersController::class, 'load_amazon_orders'])->name('load_amazon_orders');
+        Route::post('get_amazon_orders', [OrdersController::class, 'load_amazon_orders'])->name('load_amazon_orders');
+
+        //load order-details
+        Route::get('/get_order_details', [OrdersController::class, 'getOrderDetails'])->name('get_order_details');
+
+
+        //mark order as shipped
+        Route::post('/mark_order_shipped', [OrdersController::class, 'mark_order_shipped'])->name('mark_order_shipped');
+
+
+
 
         
     });
 });
 
-Route::get('/download_orders', [DownloadOrdersController::class, 'download_orders'])->name('download_orders');
+Route::get('/download_orders', [OrdersController::class, 'download_orders'])->name('download_orders');
 
 
 Route::get('/token', function () {

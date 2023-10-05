@@ -47,9 +47,6 @@
 
         <div class="card card-body border-0 shadow table-wrapper table-responsive">
 
-            {{-- FILTERS AND ORDER DATE RADIO BUTTONS COMPONENT --}}
-            {{-- @include('orders.filters_components.fields') --}}
-
             <div class="table-responsive">
 
                 <table class="table table-hover nowrap table-bordered " width="100%" id="myTable">
@@ -73,18 +70,86 @@
         </div>
 
 
-
-
-
-
-
-
-        {{-- create manaul label modal --}}
-        {{-- @include('orders.confirm_ship_components.modal_popup') --}}
-
-
         {{-- create order details modal --}}
-        {{-- @include('orders.order_details_comp.modal_popup') --}}
+        @include('orders.order_details_components.details-modal')
+
+
+        {{-- MARK AS SHIPPED MODAL --}}
+        <div id="create-label" tabindex="-1" role="dialog" aria-labelledby="manual_label" aria-hidden="true"
+            class="modal fade text-left out">
+            <div role="document" class="modal-dialog modal-lg ">
+                <div class="modal-content">
+                    <form id="markOrderAsShippedForm" method="POST">
+                        <div class="modal-header">
+                            <h5 id="manual_label" class="modal-title">Mark Order as Shipped</h5>
+                            <button type="button" data-dismiss="modal" aria-label="Close" class="close"><span
+                                    aria-hidden="true"><i class="dripicons-cross"></i></span></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="hf_order_id" id="hf_order_id_ml">
+                            <input type="hidden" name="hf_ship_date" id="hf_ship_date_ml">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="order_items_container_ml"></div>
+                                    </div>
+                                </div>
+                            </div>
+                                <hr />
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="shipDate_ml">Ship Date</label>
+                                            <input type="date" id="shipDate_ml" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Tracking ID * </label>
+                                            <input type="number" name="TrackingId" class="form-control" id="TrackingId"
+                                                placeholder="Enter tracking id" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="form-group">
+                                            <label>Shipping Service*</strong> </label>
+                                            <select name="ShippingServiceId" id="ShippingServiceId_ml"
+                                                class="form-control" required>
+                                                <option disabled selected>Select</option>
+                                                <option value="USPS_PTP_FC">USPS First Class</option>
+                                                <option value="UPS_PTP_GND">UPS® Ground</option>
+                                                <option value="USPS_PTP_PRI">USPS Priority Mail®</option>
+                                                <option value="USPS_PTP_PRI_LFRE">USPS Priority Mail L</option>
+                                                <option value="USPS_PTP_PRI_CUBIC">USPS Priority Mail C</option>
+                                                <option value="USPS_PTP_PSBN">USPS Parcel Select</option>
+                                                <option value="USPS_PTP_PRI_PFRE">USPS Priority Mail P</option>
+                                                <option value="USPS_PTP_PRI_FRE">USPS Priority Mail® </option>
+                                                <option value="UPS_PTP_3DAY_SELECT">UPS 3 Day Select®</option>
+                                                <option value="UPS_PTP_2ND_DAY_AIR">UPS 2nd Day Air®</option>
+                                                <option value="USPS_PTP_PRI_MFRB">USPS Priority Mail F</option>
+                                                <option value="USPS_PTP_PRI_LFRB">USPS Priority Mail® </option>
+                                                <option value="USPS_PTP_EXP_FRE">USPS Priority Mail E</option>
+                                                <option value="FEDEX_PTP_EXPRESS_SAVER">FedEx Express Saver®</option>
+                                                <option value="FEDEX_PTP_SECOND_DAY">FedEx 2Day®</option>
+                                                <option value="UPS_PTP_NEXT_DAY_AIR">UPS Next Day Air®</option>
+                                                <option value="FEDEX_PTP_PRIORITY_OVERNIGHT">FedEx Priority Overn</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <input type="submit" id="btn_save_label" class="btn btn-warning btn-sm text-dark"
+                                        value="Mark as Shipped" />
+                                </div>
+
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
 
 
 
@@ -108,7 +173,7 @@
                 const table = $('#myTable').DataTable();
                 table.ajax.reload();
             }
-            
+
 
             function calculateAgeString(timeDifference) {
                 var seconds = Math.floor(timeDifference / 1000);
@@ -279,7 +344,7 @@
                             return '<div class="order-details">' + d + "</div>"
                         }
                     },
-                   
+
                     {
                         data: 'shipping_address_state_or_region'
                     },
@@ -318,7 +383,7 @@
 
                             var ship_date_formatted = shipDate.format("MMM D, YYYY");
                             var orderStatus =
-                                '<div class="badge font-size-12" style="color:#ffff; background-color: rgb(251 0 45 / 63%);">' +
+                                '<div class="badge font-size-12" style="color:#ffff; background-color: rgb(251 0 45 / 75%);">' +
                                 data.OrderStatus + '</div>';
 
                             var warning_message = '';
@@ -338,7 +403,9 @@
                     {
                         data: "PurchaseLabel",
                         render: function(t, a, e) {
-                            return '<div class="button-container"><button type="button" onclick="create_manual_label(\'' + e.amazon_order_id + '\',1);" title="Confirm Shipment" style="cursor: pointer;" class="btn btn-sm btn-warning text-dark rounded-pill border border-secondary">Confirm Shipment</button></div>'
+                            return '<div class="button-container"><button type="button" onclick="create_manual_label(\'' +
+                                e.amazon_order_id +
+                                '\',1);" style="cursor: pointer;" class="btn btn-sm btn-warning text-dark rounded-pill border border-secondary">Mark as Shipped</button></div>'
                         }
                     },
                 ],
@@ -373,9 +440,10 @@
 
             //============ end of datatable ===========
 
-
-
         });
+
+        //inclue order-details JavaScript functions
+        @include('orders.order_details_components.details-js')
 
 
         function insertLineBreaks(str, lettersPerLine) {
@@ -428,9 +496,6 @@
 
         }
 
-        
-
-
         function redraw() {
             jQuery('#myTable').DataTable().ajax.reload();
         }
@@ -445,6 +510,192 @@
             return moment(date).format('YYYY-MM-DD HH:mm:ss');
         }
 
+        //Mark as SHIPPED MODULE 
+        $("#markOrderAsShippedForm").submit(function(e) {
+            e.preventDefault();
 
+            //get order details
+            const checkboxes = document.querySelectorAll(
+                '#order_items_container_ml input[type="checkbox"]'
+            );
+            const selectElems = document.querySelectorAll(
+                "#order_items_container_ml select"
+            );
+
+            const checkedValues = [];
+
+            checkboxes.forEach((checkbox, index) => {
+                if (checkbox.checked) {
+                    const item = {
+                        OrderItemId: checkbox.value,
+                        QuantityOrdered: selectElems[index].value,
+                    };
+                    checkedValues.push(item);
+                }
+            });
+
+            // Get the values from the input fields
+            var order_id = $("#hf_order_id_ml").val();
+            var shipDate = $("#shipDate_ml").val();
+            var trackingId = $("#TrackingId").val();
+            var shippingServiceId = $("#ShippingServiceId_ml").val();
+            var serviceName = $("#ShippingServiceId_ml option:selected").text();
+            var CarrierName = serviceName.split(" ")[0];
+
+            // Create the data object
+            var data = {
+                _token: "{{ csrf_token() }}",
+                order_id: order_id,
+                shipDate_ml: shipDate,
+                TrackingId: trackingId,
+                ShippingServiceId_ml: shippingServiceId,
+                serviceName: serviceName,
+                CarrierName: CarrierName,
+                LabelItems: checkedValues,
+            };
+
+            // Send the AJAX request
+            $.ajax({
+                url: '{{ route('mark_order_shipped') }}',
+                type: "POST",
+                data: data,
+                beforeSend: function() {
+                    $("#create-label").modal("hide");
+                    fire_sweet_alert("Resques submitted, please wait for the response");
+                },
+                success: function(response) {
+                    $("#create-label").modal("hide");
+                    if (response.error) {
+                        fire_sweet_alert(response.error, 0);
+                    } else {
+                        $("#markOrderAsShippedForm")[0].reset();
+                        fire_sweet_alert(response.message);
+                        redraw();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log(xhr.responseText);
+                },
+            });
+        });
+        //END MANUAL_LABEL SUBMIT FROM
+
+        //create return model of manual label
+        function create_manual_label(order_id, quantity) {
+            $("#order_details_modal").modal("hide")
+            $("#hf_order_id").val(order_id);
+            if (quantity > 1) {
+                $("#return_quantity").prop("disabled", false);
+            } else {
+                $("#return_quantity").prop("disabled", true);
+            } {
+                $.ajax({
+                    type: "GET",
+                    cache: false,
+                    url: "{{ route('get_order_details') }}",
+                    contentType: "application/json; charset=utf-8",
+                    data: {
+                        order_id: order_id,
+                    },
+                    success: function(data) {
+                        var contentBoxHTML = generateContentBox_ml(data);
+                        $("#order_items_container_ml").html(contentBoxHTML);
+                    },
+                    error: function(data) {},
+                });
+            }
+
+            // $('#order-return').modal('show');
+            $("#create-label").modal("show");
+        }
+
+        //for manual label
+        function generateContentBox_ml(data) {
+            // console.log(JSON.stringify(data));
+            var content = "";
+
+            $("#hf_order_id_ml").val(data.amazon_order_id);
+            $("#hf_ship_date_ml").val(data.earliest_ship_date);
+            // $('#shipDate_ml').html(formatDateToString(data.earliest_ship_date, 'YYYY-MM-DD'));
+            $("#shipDate_ml").val(
+                formatDateToString(data.earliest_ship_date, "YYYY-MM-DD")
+            );
+
+            for (var i = 0; i < data.order_details.length; i++) {
+                var orderDetail = data.order_details[i];
+
+                var productName = orderDetail.ProductName.substring(0, 20);
+                var fullProductName = orderDetail.ProductName;
+                var item_price_tax =
+                    parseFloat(orderDetail.ItemPrice) +
+                    parseFloat(orderDetail.ItemTaxAmount);
+                var total_item_price_tax = item_price_tax.toFixed(2);
+                productName += orderDetail.ProductName.length > 20 ? "..." : "";
+                content +=
+                    '<div class="col-md-4 p-1"><div class="row order-detail-parent">';
+                content +=
+                    '<div class="col-md-12"><span style="font-weight:bold" title="' +
+                    fullProductName +
+                    '">' +
+                    '<a href="https://www.amazon.com/gp/product/' +
+                    orderDetail.ASIN +
+                    '"' +
+                    ' target="_blank">' +
+                    '<div title="' +
+                    fullProductName +
+                    '">' +
+                    productName +
+                    "</div>" +
+                    "</a>" +
+                    "</span></div>";
+                content +=
+                    '<div class="col-md-12"><span  style="font-weight:bold;margin-right:5px;">Qty: </span>' +
+                    orderDetail.Quantity +
+                    "</div>";
+                content +=
+                    '<div class="col-md-12"><span style="font-weight:bold;float:left;margin-right:5px;">Price: </span>' +
+                    total_item_price_tax +
+                    "</div>";
+                content +=
+                    '<div class="col-md-4 p-2"><div class="form-check"><input type="checkbox" checked id="' +
+                    orderDetail.AmazonOrderItemCode +
+                    '" class="form-check-input" value="' +
+                    orderDetail.AmazonOrderItemCode +
+                    '"></div></div>';
+                content +=
+                    '<div class="col-md-2 pull-right mt-2">Qty:</div><div class="col-md-6 "><select class="form-control small">';
+                for (var j = 1; j <= orderDetail.Quantity; j++) {
+                    //   content += '<option value="' + j + '"' + (orderDetail.Quantity == j ? ' selected' : '') + '>' + j + '</option>';
+                    var selected =
+                        parseInt(orderDetail.Quantity) === parseInt(j) ?
+                        " selected" :
+                        "";
+                    content +=
+                        '<option value="' + j + '"' + selected + ">" + j + "</option>";
+                }
+                content += "</select></div>";
+                content += "</div></div>";
+            }
+            return '<div class="row">' + content + "</div>";
+        }
+
+        // for custom dimensions- for manual label
+        $("#add-dimension_ml").click(function(e) {
+            e.preventDefault();
+            var height = $("#height_ml").val();
+            var width = $("#width_ml").val();
+            var length = $("#length_ml").val();
+
+            if (height && width && length) {
+                var value = length + "x" + width + "x" + height;
+                var option = $("<option>").attr("value", value).text(value);
+                $("#dimensions_ml").append(option);
+
+                // clear the input fields
+                $("#height_ml").val("");
+                $("#width_ml").val("");
+                $("#length_ml").val("");
+            }
+        });
     </script>
 @endsection

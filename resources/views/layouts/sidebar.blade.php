@@ -1,7 +1,8 @@
 <!-- ========== Left Sidebar Start ========== -->
 <style>
     #sidebar-menu ul li ul.sub-menu li a {
-        color: #d9dde3 !important;
+        color: #807386 !important;
+        /* color: #d9dde3 !important; */
     }
 
     #sidebar-menu .has-arrow:after {
@@ -11,6 +12,13 @@
         float: right;
         transition: transform 0.2s;
         font-size: 1rem;
+    }
+
+    .divider {
+        border: 1px solid #ccc;
+        /* Adjust the border style and color as needed */
+        margin: 5px 0;
+        /* Adjust the margin to control the spacing around the divider */
     }
 </style>
 <div class="vertical-menu">
@@ -50,9 +58,13 @@
                         <span>Orders</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
-						<li><a href="{{route('ViewNewOrders')}}" >New</a></li>
-						<li><a href="{{route('ViewCanceledOrders')}}" >Canceled</a></li>
-						<li><a href="{{route('ViewShippedOrders')}}" >Shipped</a></li>
+                        <li><a href="{{ route('ViewNewOrders') }}">New</a></li>
+                        <li><a href="{{ route('ViewCanceledOrders') }}">Canceled</a></li>
+                        <li><a href="{{ route('ViewShippedOrders') }}">Shipped</a></li>
+                        <li>
+                            <hr class="divider">
+                        </li>
+                        <li><a href="{{ route('download_orders') }}" class="text-success fw-bold">Download</a></li>
                     </ul>
                 </li>
 

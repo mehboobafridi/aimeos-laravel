@@ -11,7 +11,7 @@ return [
             "lwaRefreshToken" => env('AMZ_LWA_REFRESH_TOKEN'),
             "awsAccessKeyId" => env('AWS_ACCESS_KEY_ID'),
             "awsSecretAccessKey" => env('AWS_SECRET_ACCESS_KEY'),
-            "endpoint" => Endpoint::NA,
+            "endpoint" => Endpoint::EU,
             'roleArn' => env('AWS_ROLE_ARN'),
 	],
 	'login_url' => [
@@ -36,7 +36,7 @@ return [
 			'name' => 'GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_GENERAL',
 			'obj' => \SellingPartnerApi\ReportType::GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_GENERAL,
 			'sheet' => 'Orders',
-			'interval' => 30,
+			'interval' => 300,
 		],
 		'order_tracking' => [
 			'name' => 'GET_AMAZON_FULFILLED_SHIPMENTS_DATA_GENERAL',

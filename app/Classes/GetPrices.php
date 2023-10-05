@@ -388,7 +388,7 @@ class GetPrices
     {
         $createFeedSpecs = [
             'feed_type' => 'GET_AMAZON_FULFILLED_SHIPMENTS_DATA_GENERAL',
-            'marketplace_ids' => [config('amz.marketplaces.US')],
+            'marketplace_ids' => [config('amz.marketplaces.GB')],
         ];
         try {
             $feedsApi = new \SellingPartnerApi\Api\FeedsV20210630Api($AmzConfig);
