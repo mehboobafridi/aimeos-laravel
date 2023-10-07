@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\AmazonOrder;
 use App\Models\OrderDetail;
+use App\Models\Label;
+use App\Models\LabelItem;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DB;
@@ -37,8 +39,6 @@ use Spatie\ArrayToXml\ArrayToXml;
 use DateTime;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
-
-
 
 class OrdersController extends Controller
 {
@@ -115,7 +115,7 @@ class OrdersController extends Controller
                         foreach ($response_to_array as $orderData) {
 
                             try {
-                                
+
                                 // $order = AmazonOrder::updateOrCreate(['amazon_order_id' => $orderData['AmazonOrderId']], [
                                 $order = AmazonOrder::updateOrCreate(['amazon_order_id' => $orderData['AmazonOrderId'], 'user_id' => $user_id], [
                                     'user_id' => $user_id,
@@ -301,14 +301,14 @@ class OrdersController extends Controller
 
             if($page_order_status == 'Shipped') {
                 //shipped-orders
-                $whereStatment = '(amazon_orders.order_status="Shipped" AND amazon_orders.user_id = "'.$user_id.'")';
+                $whereStatment = '(amazon_orders.order_status="Shipped" AND amazon_orders.user_id = "' . $user_id . '")';
             } elseif($page_order_status == 'Canceled') {
                 //canceled-orders
-                $whereStatment = '(amazon_orders.order_status="Canceled" OR amazon_orders.is_cancellation_requested="1" AND amazon_orders.order_status != "Unshipped" AND amazon_orders.order_status != "PartiallyShipped" AND amazon_orders.order_status != "Shipped"  AND amazon_orders.user_id = "'.$user_id.'")';
+                $whereStatment = '(amazon_orders.order_status="Canceled" OR amazon_orders.is_cancellation_requested="1" AND amazon_orders.order_status != "Unshipped" AND amazon_orders.order_status != "PartiallyShipped" AND amazon_orders.order_status != "Shipped"  AND amazon_orders.user_id = "' . $user_id . '")';
             } elseif($page_order_status == 'Unshipped') {
                 try {
                     // $whereStatment = "(amazon_orders.order_status='Unshipped') OR amazon_orders.order_status='PartiallyShipped' ";
-                    $whereStatment = '(amazon_orders.order_status="Unshipped" OR amazon_orders.order_status="PartiallyShipped") AND (amazon_orders.user_id = "'.$user_id.'")';
+                    $whereStatment = '(amazon_orders.order_status="Unshipped" OR amazon_orders.order_status="PartiallyShipped") AND (amazon_orders.user_id = "' . $user_id . '")';
 
                 } catch (\Throwable $th) {
                     throw $th;
@@ -652,44 +652,110 @@ class OrdersController extends Controller
 
     // mark order as shipped
 
-    public function mark_order_shipped(Request $request){
+    public function mark_order_shipped(Request $request)
+    {
+        $user_id = Auth::user()->id;
+        $amazonOrderId = $request->input('order_id');
+        $shipDate = Carbon::parse($request->input('shipDate_ml'))->format('Y-m-d H:i:s');
+        $CarrierCode = $request->input('CarrierName');
+        $TrackingId = $request->input('TrackingId') ?? null;
+
+        //process the update_tracking on amazon
+        try {
+            $feedArray = [ 'order-id' => $amazonOrderId, 'shipdate' => $shipDate,'CarrierCode' => $CarrierCode, 'tracking' => $TrackingId ];
+            $TrackingController = new TrackingController();
+            $updateTracking = $TrackingController->update_trackings($feedArray);
+            if ($updateTracking !== true) {
+                // return response()->json([
+                //     'message' => 'Order marked as shipped and Tracking Uploaded successfully'
+                // ]);
+            // } else {
+                return response()->json([
+                    'error' => $updateTracking
+                ]);
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return response()->json([
+                'error' => $th->getMessage()
+            ]);
+        }
+        
         //change orders status is_actually_shipped to true order_status to 'shipped'
         try {
-            $amazonOrderId = $request->input('order_id');
-
             AmazonOrder::where('amazon_order_id', $amazonOrderId)->update([
-                'is_actually_shipped' => 1, 
+                'is_actually_shipped' => 1,
                 'order_status' => 'Shipped',
+                'trackingId' => $TrackingId,
+                'carrier_code' => $CarrierCode,
+                'shipped_date' => $shipDate,
             ]);
 
-            return response()->json(['message' => 'Order marked as shipped succefully!']);
-            
         } catch (\Throwable $th) {
             return response()->json([
                 'error' => $th->getMessage()
             ]);
         }
 
-        // //process the update_tracking on amazon
-        
-        // $shipDate = Carbon::parse($request->input('shipDate_ml'))->format('Y-m-d H:i:s');
-        // $CarrierName = $request->input('CarrierName');
-        // $TrackingId = $request->input('TrackingId');
+        // store Label and label Items data
 
-        // $feedArray = [ 'order-id' => $amazonOrderId, 'shipdate' => $shipDate,'carriercode'=> $CarrierName, 'tracking'=> $TrackingId ];
+        try {
+            $data = [
+                'user_id' => $user_id,
+                'AmazonOrderId' => $amazonOrderId,
+                'ShipDate' => $shipDate,
+                'ShippingServiceId' => $request->input('ShippingServiceId_ml'),
+                'ShippingServiceName' => $request->input('serviceName'),
+                'CarrierName' => $CarrierCode,
+                'TrackingId' => $TrackingId,
+            ];
 
-        // $TrackingController = new TrackingController();
+            $existingOrder = Label::where('AmazonOrderId', $data['AmazonOrderId'])->first();
 
-        // $updateTracking = $TrackingController->update_trackings($feedArray);
+            if (!$existingOrder) {
+                // AmazonOrderId does not exist in the table, proceed with insertion
+                Label::create($data);
+                // Label::updateOrCreate(['AmazonOrderId' => $amazonOrderId], $data);
 
-        // if ($updateTracking === true) {
-        //     return response()->json([
-        //         'message' => 'Label saved and Tracking Uploaded to Amazon successfully'
-        //     ]);
-        // } else {
-        //     return response()->json([
-        //         'error' => $updateTracking
-        //     ]);
-        // }
+                // STORE ORDER DETAILS IN LABELITEMS
+                try {
+                    $labelItems = $request->input('LabelItems');
+                    $itemCodes = [];
+                    $orderDetails = [];
+
+                    foreach ($labelItems as $item) {
+                        $itemCode = $item['OrderItemId'];
+                        $itemCodes[] = $itemCode;
+                        $orderDetail = OrderDetail::where('AmazonOrderItemCode', $itemCode)->first();
+                        if ($orderDetail) {
+                            $ItemsData = [
+                                'ASIN' => $orderDetail->ASIN,
+                                'SKU' => $orderDetail->SKU,
+                                'AmazonOrderId' => $amazonOrderId,
+                                'AmazonOrderItemCode' => $itemCode,
+                                'Quantity' => $item['QuantityOrdered'],
+                                'TrackingId' => $TrackingId,
+                            ];
+                            LabelItem::create($ItemsData);
+
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    return response()->json([
+                        'error' => $th->getMessage()
+                    ]);
+                }
+
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return response()->json([
+                'error' => $th->getMessage()
+            ]);
+        }
+
+
+        return response()->json(['message' => 'Order marked as shipped and Tracking Uploaded successfully']);
+
     }
 }

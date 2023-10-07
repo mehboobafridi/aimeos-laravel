@@ -17,7 +17,9 @@ class TrackingController extends Controller
     public function update_trackings($feedArray)
     {
         try {
-            $config = $this->getAMZConfig();
+            // $config = $this->getAMZConfig();
+            $config = get_amazon_config();
+
 
             $feedContents = $this->generateTrackingFeed_XML($feedArray, 1);
 
@@ -41,7 +43,7 @@ class TrackingController extends Controller
             $createFeedSpecs = [
                 'feed_type' => $feedType['name'],
                 'input_feed_document_id' => $feedDocumentId,
-                'marketplace_ids' => [config('amz.marketplaces.US')],
+                'marketplace_ids' => [config('amz.marketplaces.GB')],
             ];
 
             $productFeed = $feedsApi->createFeed(
@@ -113,7 +115,7 @@ class TrackingController extends Controller
                     $shipping_method = $productList['shipping-method'];
                 }
 
-                $feed_body .= $this->create_tracking_message($intCounter, $productList['order-id'], $productList['shipdate'], $productList['carriercode'], $productList['tracking'], $shipping_method);
+                $feed_body .= $this->create_tracking_message($intCounter, $productList['order-id'], $productList['shipdate'], $productList['CarrierCode'], $productList['tracking'], $shipping_method);
                 $intCounter++;
                 // }
 
@@ -129,7 +131,7 @@ class TrackingController extends Controller
     }
 
 
-    public function create_tracking_message($message_id, $order_id, $ship_date, $carriercode, $tracking, $shipping_method = null)
+    public function create_tracking_message($message_id, $order_id, $ship_date, $carriercode, $tracking = null, $shipping_method = null)
     {
         try {
             $msg = '<Message>
@@ -143,8 +145,10 @@ class TrackingController extends Controller
             if($shipping_method != null) {
                 $msg .= '<ShippingMethod>' . $shipping_method . '</ShippingMethod>';
             }
-            $msg .= '<ShipperTrackingNumber>' . $tracking . '</ShipperTrackingNumber>
-					</FulfillmentData>
+            if($tracking != null) {
+                $msg .= '<ShipperTrackingNumber>' . $tracking . '</ShipperTrackingNumber>';
+            }
+            $msg .= '</FulfillmentData>
 				</OrderFulfillment>
 			  </Message>';
             return $msg;

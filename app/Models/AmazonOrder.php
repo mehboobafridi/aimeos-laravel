@@ -15,6 +15,9 @@ class AmazonOrder extends Model
     protected $fillable = [
         'user_id',
         'amazon_order_id',
+        'trackingId',
+        'carrier_code',
+        'shipped_date',
         'purchase_date',
         'last_update_date',
         'order_status',

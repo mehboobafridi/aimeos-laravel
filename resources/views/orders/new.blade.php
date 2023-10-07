@@ -117,21 +117,21 @@
                                                 class="form-control" required>
                                                 <option disabled selected>Select</option>
                                                 <option value="USPS_PTP_FC">USPS First Class</option>
-                                                <option value="UPS_PTP_GND">UPS® Ground</option>
-                                                <option value="USPS_PTP_PRI">USPS Priority Mail®</option>
+                                                <option value="UPS_PTP_GND">UPS Ground</option>
+                                                <option value="USPS_PTP_PRI">USPS Priority Mail</option>
                                                 <option value="USPS_PTP_PRI_LFRE">USPS Priority Mail L</option>
                                                 <option value="USPS_PTP_PRI_CUBIC">USPS Priority Mail C</option>
                                                 <option value="USPS_PTP_PSBN">USPS Parcel Select</option>
                                                 <option value="USPS_PTP_PRI_PFRE">USPS Priority Mail P</option>
-                                                <option value="USPS_PTP_PRI_FRE">USPS Priority Mail® </option>
-                                                <option value="UPS_PTP_3DAY_SELECT">UPS 3 Day Select®</option>
-                                                <option value="UPS_PTP_2ND_DAY_AIR">UPS 2nd Day Air®</option>
+                                                <option value="USPS_PTP_PRI_FRE">USPS Priority Mail</option>
+                                                <option value="UPS_PTP_3DAY_SELECT">UPS 3 Day Select</option>
+                                                <option value="UPS_PTP_2ND_DAY_AIR">UPS 2nd Day Air</option>
                                                 <option value="USPS_PTP_PRI_MFRB">USPS Priority Mail F</option>
-                                                <option value="USPS_PTP_PRI_LFRB">USPS Priority Mail® </option>
+                                                <option value="USPS_PTP_PRI_LFRB">USPS Priority Mail</option>
                                                 <option value="USPS_PTP_EXP_FRE">USPS Priority Mail E</option>
                                                 <option value="FEDEX_PTP_EXPRESS_SAVER">FedEx Express Saver®</option>
-                                                <option value="FEDEX_PTP_SECOND_DAY">FedEx 2Day®</option>
-                                                <option value="UPS_PTP_NEXT_DAY_AIR">UPS Next Day Air®</option>
+                                                <option value="FEDEX_PTP_SECOND_DAY">FedEx 2Day</option>
+                                                <option value="UPS_PTP_NEXT_DAY_AIR">UPS Next Day Air</option>
                                                 <option value="FEDEX_PTP_PRIORITY_OVERNIGHT">FedEx Priority Overn</option>
                                             </select>
                                         </div>
