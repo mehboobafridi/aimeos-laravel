@@ -32,11 +32,18 @@ return [
 			'sheet' => 'adjustment',
 		],
 		*/
+		'shipped' => [
+			'name' => 'GET_FLAT_FILE_ORDER_REPORT_DATA_SHIPPING',
+			'obj' => \SellingPartnerApi\ReportType::GET_FLAT_FILE_ORDER_REPORT_DATA_SHIPPING,
+			'sheet' => 'shipped',
+			'interval' => 60,
+		],
+
 		'order' => [
 			'name' => 'GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_GENERAL',
 			'obj' => \SellingPartnerApi\ReportType::GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_GENERAL,
 			'sheet' => 'Orders',
-			'interval' => 300,
+			'interval' => 30,
 		],
 		'order_tracking' => [
 			'name' => 'GET_AMAZON_FULFILLED_SHIPMENTS_DATA_GENERAL',

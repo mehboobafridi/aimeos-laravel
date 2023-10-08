@@ -4,7 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrdersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -23,12 +23,27 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
 
             try {
-                $homeController = new HomeController();
+                $OrdersController = new OrdersController();
                 $request = new Request(); // Create a new Request object
-                $homeController->getOrdersRest($request);
-                Log::info('getOrdersRest succeeded');
+                $OrdersController->RequestReport($request);
+                
+                Log::info('RequestReport() executed successfully');
             } catch (\Throwable $e) {
-                Log::error('getOrdersRest failed: ' . $e->getMessage());
+                Log::error('RequestReport() failed: ' . $e->getMessage());
+            }
+        })->everyTwoHours();
+
+
+        $schedule->call(function () {
+
+            try {
+                $OrdersController = new OrdersController();
+                $request = new Request(); // Create a new Request object
+                $OrdersController->DownloadOrders($request);
+
+                Log::info('DownloadOrders() executer successfully');
+            } catch (\Throwable $e) {
+                Log::error('DownloadOrders() failed: ' . $e->getMessage());
             }
         })->everyTenMinutes();
     }

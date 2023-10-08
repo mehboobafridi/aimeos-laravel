@@ -17,7 +17,7 @@ class CreateReportsHistoriesTable extends Migration
             $table->id();
             $table->string('seller_email', 40);
             $table->string('seller_amz_id', 30);
-            $table->string('report_id', 50);
+            $table->string('report_id', 30);
             $table->boolean('is_downloaded')->default('0');
             $table->timestamps();
         });

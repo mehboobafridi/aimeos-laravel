@@ -25,3 +25,5 @@ Homestead.json
 
 .vscode/launch.json
 bootstrap/cache/*
+
+storage/xml-responses
