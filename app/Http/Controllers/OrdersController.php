@@ -282,9 +282,8 @@ class OrdersController extends Controller
 
     }
 
+    
     // LOAD AMAZON ORDERS TO VIEWS ON DATATABLES
-
-
     public function load_amazon_orders(Request $request)
     {
         try {
@@ -669,7 +668,7 @@ class OrdersController extends Controller
                 // return response()->json([
                 //     'message' => 'Order marked as shipped and Tracking Uploaded successfully'
                 // ]);
-            // } else {
+                // } else {
                 return response()->json([
                     'error' => $updateTracking
                 ]);
@@ -680,7 +679,7 @@ class OrdersController extends Controller
                 'error' => $th->getMessage()
             ]);
         }
-        
+
         //change orders status is_actually_shipped to true order_status to 'shipped'
         try {
             AmazonOrder::where('amazon_order_id', $amazonOrderId)->update([
@@ -758,4 +757,10 @@ class OrdersController extends Controller
         return response()->json(['message' => 'Order marked as shipped and Tracking Uploaded successfully']);
 
     }
+
+    protected function getDateTime($input = '')
+    {
+        return (new \DateTime($input))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
+    }
+
 }
