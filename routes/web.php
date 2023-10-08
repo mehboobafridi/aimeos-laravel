@@ -18,10 +18,10 @@ Route::group(['middleware' => 'check.status'], function () {
         Route::get('/authCallback', [SubscriberController::class, 'amzCallBack'])->name('authCallback');
         Route::post('/connect-amazon', [SubscriberController::class, 'auth'])->name('connect_amazon');
         Route::get('/get-data', [SubscriberController::class,'getData'])->name('get.data');
-        
+
         Route::delete('subscribed/{id}', [SubscriberController::class,'destroy'])->name('subscribed.destroy');
 
-        
+
         Route::group(['middleware' => ['permission:users-management']], function () {
             Route::resource('permissions', PermissionsController::class);
             Route::resource('users-management', UsersManagmentController::class);
@@ -29,17 +29,17 @@ Route::group(['middleware' => 'check.status'], function () {
 
         //show new orders
         // Route::group(['middleware' => ['permission:all-orders']], function () {
-            Route::view('/new-orders', 'orders.new')->name('ViewNewOrders');
+        Route::view('/new-orders', 'orders.new')->name('ViewNewOrders');
         // });
 
         //show canceled orders
         // Route::group(['middleware' => ['permission:all-orders']], function () {
-            Route::view('/canceled-orders', 'orders.canceled')->name('ViewCanceledOrders');
+        Route::view('/canceled-orders', 'orders.canceled')->name('ViewCanceledOrders');
         // });
 
         //show shipped orders
         // Route::group(['middleware' => ['permission:all-orders']], function () {
-            Route::view('/shipped-orders', 'orders.shipped')->name('ViewShippedOrders');
+        Route::view('/shipped-orders', 'orders.shipped')->name('ViewShippedOrders');
         // });
 
         //load amazon orders to datatable on orders pages views
@@ -55,7 +55,7 @@ Route::group(['middleware' => 'check.status'], function () {
 
 
 
-        
+
     });
 });
 
@@ -72,6 +72,7 @@ Route::get('/clear-cache', function () {
     return redirect()->back()->with('hardReload', true);
 });
 
+Route::get('/test', [OrdersController::class, 'requestOrders']);
 // Route::get('/test', function(){
-//     
+// return;
 // });

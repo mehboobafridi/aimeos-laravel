@@ -6,6 +6,10 @@ use App\Models\AmazonOrder;
 use App\Models\OrderDetail;
 use App\Models\Label;
 use App\Models\LabelItem;
+use App\Models\SellerOrderHistory;
+use App\Models\ReportsHistory;
+use App\Models\Site;
+use App\Models\Subscriber;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DB;
@@ -42,6 +46,128 @@ use Illuminate\Support\Facades\Schema;
 
 class OrdersController extends Controller
 {
+    public function requestOrders(Request $request)
+    {
+        //insert or update sellers in sellers_orders_history table if not exist
+        try {
+            $this->set_sellers_orders_history();
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+        $sellers = SellerOrderHistory::orderBy('last_download_date', 'asc')->get();
+
+        foreach ($sellers as $seller) {
+
+            try {
+                $seller_email = $seller['seller_email'];
+                $seller_amz_id = $seller['seller_amz_id'];
+                $site_code = $seller['site_code'];
+                $site_id = $seller['site_id'];
+
+                //check if the current seller's report_id is already in que to download
+                $reporst_count = ReportsHistory::where([
+                    'seller_email' => $seller_email,
+                    'seller_amz_id' => $seller_amz_id,
+                    'is_downloaded' => 0,
+                    ])->count();
+
+                if ($reporst_count > 0) {
+                    // there is already one report_id of this seller is in que to download // skip the current itearaion
+                    continue;
+                }
+
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+
+            $config = get_amazon_config($seller_email, $seller_amz_id, $site_code);
+
+            $reportApi = new \SellingPartnerApi\Api\ReportsApi($config);
+            // $marketplace_ids = [config('amz.marketplaces.GB')];
+            $marketplace_ids = [0 => $site_id];
+
+            $data = [
+                'report_type' => config('amz.feed_type.order.name'),
+                'marketplace_ids' => $marketplace_ids,
+                'data_start_time' => Carbon::now()->subDays(config('amz.feed_type.order.interval'))->format('Y-m-d\TH:i:s.u\Z'),
+                'data_end_time' => validateUTC('+ 2 hours'),
+            ];
+
+            $body = new \SellingPartnerApi\Model\Reports\CreateReportSpecification($data);
+            try {
+                $report_id = $reportApi->createReport($body)->getReportId();
+            } catch (\Exception $th) {
+                throw $th;
+            }
+
+            if ($report_id) {
+                //store report_id in reports_histories table along with seller information
+                ReportsHistory::create([
+                    'seller_email' => $seller_email,
+                    'seller_amz_id' => $seller_amz_id,
+                    'report_id' => $report_id,
+                    'is_downloaded' => 0,
+                ]);
+
+                //update the the 'last_download_date' in SellerOrderHistory table
+                $now = now();
+                SellerOrderHistory::where([
+                    'seller_email' => $seller_email,
+                    'seller_amz_id' => $seller_amz_id,
+                    'site_id' => $seller->site_id,
+                ])->update(['last_download_date' => $now]);
+            }
+
+            $s = 'abc';
+        }
+
+    }
+
+    public function set_sellers_orders_history()
+    {
+        try {
+
+            $sellers = DB::table('users')
+            ->join('subscribers', 'users.email', '=', 'subscribers.user_id')
+            ->join('sites', 'subscribers.site_code', '=', 'sites.site_code')
+            ->whereNotNull('subscribers.amz_seller_id')
+            ->whereNotNull('subscribers.refresh_token')
+            ->select('users.email', 'subscribers.site_code', 'subscribers.amz_seller_id', 'sites.site_id')
+            ->get();
+
+            // dd($sellers);
+
+            $currentdate = now();
+            foreach ($sellers as $seller) {
+                DB::connection()->enableQueryLog();
+
+                $insert_seller_history = SellerOrderHistory::updateOrCreate(
+                    [
+                        'seller_email' => $seller->email,
+                    ],
+                    [
+                        'seller_amz_id' => $seller->amz_seller_id,
+                        'site_code' => $seller->site_code,
+                        'site_id' => $seller->site_id,
+                        //'last_download_date' // null by default,
+                    ]
+                );
+
+                $queries = DB::getQueryLog();
+                $s = 'abc';
+
+            }
+
+            // return 'data inserted';
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+
+
+
+    }
+
     public function download_orders()
     {
         $mainArray = array();
@@ -115,7 +241,6 @@ class OrdersController extends Controller
                         foreach ($response_to_array as $orderData) {
 
                             try {
-
                                 // $order = AmazonOrder::updateOrCreate(['amazon_order_id' => $orderData['AmazonOrderId']], [
                                 $order = AmazonOrder::updateOrCreate(['amazon_order_id' => $orderData['AmazonOrderId'], 'user_id' => $user_id], [
                                     'user_id' => $user_id,
@@ -187,6 +312,8 @@ class OrdersController extends Controller
             throw $th;
         }
     }
+
+
 
     public function get_order_items($orderID, $config)
     {
@@ -282,7 +409,7 @@ class OrdersController extends Controller
 
     }
 
-    
+
     // LOAD AMAZON ORDERS TO VIEWS ON DATATABLES
     public function load_amazon_orders(Request $request)
     {
@@ -758,9 +885,9 @@ class OrdersController extends Controller
 
     }
 
-    protected function getDateTime($input = '')
-    {
-        return (new \DateTime($input))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
-    }
+    // protected function validateUTC($input = '')
+    // {
+    //     return (new \DateTime($input))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
+    // }
 
 }

@@ -10,6 +10,6 @@ class SellerOrderHistory extends Model
     use HasFactory;
 
     protected $fillable = [
-        'seller_email','seller_amz_id','last_download_date',
+        'seller_email','seller_amz_id','last_download_date', 'site_id', 'site_code'
     ];
 }

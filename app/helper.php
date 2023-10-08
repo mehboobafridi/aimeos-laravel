@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use App\Models\Token;
+use App\Models\Subscriber;
 use SellingPartnerApi\Configuration;
 use App\Models\Label;
 use Illuminate\Support\Facades\Log;
@@ -28,13 +29,18 @@ if (!function_exists('get_label')) {
 }
 
 if (!function_exists('expired_amazon_token')) {
-    function expired_amazon_token()
+    // function expired_amazon_token()
+    function expired_amazon_token($seller_email, $seller_amz_id, $site_code)
     {
-
         try {
 
             // Retrieve the token record from the database
-            $token = Token::first();
+            // $token = Token::first();
+            $token = Subscriber::where([
+                'user_id' => $seller_email,
+                'amz_seller_id' => $seller_amz_id,
+                'site_code' => $site_code,
+            ])->first();
 
             // Check if the token record exists
             if (!$token) {
@@ -47,10 +53,10 @@ if (!function_exists('expired_amazon_token')) {
             $diffInSeconds = $now->diffInSeconds($updated_at);
 
             if($diffInSeconds >= 3500) {
-                // Delete the previous token
-                if ($token->exists) {
-                    $token->delete();
-                }
+                // token is expired token
+                // if ($token->exists) {
+                //     $token->delete();
+                // }
                 return true;
             } else {
                 return false;
@@ -147,12 +153,14 @@ if (!function_exists('request_amazon_new_token')) {
 
 
 if (!function_exists('get_amazon_token')) {
-    function get_amazon_token()
+    // function get_amazon_token()
+    function get_amazon_token($seller_email, $seller_amz_id, $site_code)
     {
 
         try {
 
-            if (expired_amazon_token() === true) {
+            // if (expired_amazon_token() === true) {
+            if (expired_amazon_token($seller_email, $seller_amz_id, $site_code) === true) {
                 // If the token needs to be refreshed, get a new one
                 $newToken = request_amazon_new_token();
                 if (!$newToken) {
@@ -161,16 +169,31 @@ if (!function_exists('get_amazon_token')) {
                 }
 
                 // Create a new token record
-                $token = new Token();
-                $token->access_token = $newToken['access_token'];
-                $token->refresh_token = $newToken['refresh_token'];
-                $token->expires_in = $newToken['expires_in'];
-                $token->save();
+                // $token = new Token();
+                // $token->access_token = $newToken['access_token'];
+                // $token->refresh_token = $newToken['refresh_token'];
+                // $token->expires_in = $newToken['expires_in'];
+                // $token->save();
+                
+                $token = Subscriber::where([
+                    'user_id' => $seller_email,
+                    'amz_seller_id' => $seller_amz_id,
+                    'site_code' => $site_code
+                ])->update([
+                    'access_token' => $newToken['access_token'],
+                    'refresh_token' => $newToken['refresh_token'],
+                ]);
+                
 
                 // Return token object
                 return $newToken;
             } else {
-                return Token::first()->toArray();
+                // return Token::first()->toArray();
+                return Subscriber::where([
+                    'user_id' => $seller_email,
+                    'amz_seller_id' => $seller_amz_id,
+                    'site_code' => $site_code,
+                ])->first()->toArray();
             }
 
 
@@ -186,16 +209,18 @@ if (!function_exists('get_amazon_token')) {
 
 
 if (!function_exists('get_amazon_config')) {
-    function get_amazon_config()
+    // function get_amazon_config()
+    function get_amazon_config($seller_email, $seller_amz_id, $site_code)
     {
 
         try {
 
-            $tokens = get_amazon_token();
+            // $tokens = get_amazon_token();
+            $tokens = get_amazon_token($seller_email, $seller_amz_id, $site_code);
             if(isset($tokens) && is_array($tokens) && count($tokens) > 0) {
                 $access_token = $tokens['access_token'];
                 $refresh_token = $tokens['refresh_token'];
-                $expires_in = $tokens['expires_in'];
+                // $expires_in = $tokens['expires_in'];
 
                 $configArray = array(
                     'lwaClientId' => config('amz.config.lwaClientId'),
@@ -205,7 +230,7 @@ if (!function_exists('get_amazon_config')) {
                     'endpoint' => config('amz.config.endpoint'),
                     'accessToken' => $access_token,
                     'lwaRefreshToken' => $refresh_token,
-                    'accessTokenExpiration' => 3000,
+                    'accessTokenExpiration' => 3500,
                     'roleArn' => env('AWS_ROLE_ARN'));
 
                 $config = new Configuration($configArray);
@@ -548,5 +573,12 @@ if (!function_exists('dateConvertDBtoForm')) {
             $date = strtotime($date);
             return date('d/m/Y', $date);
         }
+    }
+}
+
+if (!function_exists('validateUTC')) {
+    function validateUTC($input = '')
+    {
+        return (new \DateTime($input))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
     }
 }

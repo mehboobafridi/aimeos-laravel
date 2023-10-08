@@ -15,11 +15,12 @@ class CreateSellerOrderHistoriesTable extends Migration
     {
         Schema::create('seller_order_histories', function (Blueprint $table) {
             $table->id();
-            $table->string('seller_email', 20);
-            $table->string('seller_amz_id', 20)->nullable();
+            $table->string('seller_email', 40);
+            $table->string('seller_amz_id', 30)->nullable();
             $table->string('site_code', 5);
-            $table->string('site_id', 25);
-            $table->string('last_download_date', 25)->nullable();
+            $table->string('site_id', 30);
+            // $table->timestamp('last_download_date')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('last_download_date')->nullable();
             $table->timestamps();
         });
     }
