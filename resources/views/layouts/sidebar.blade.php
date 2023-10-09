@@ -58,13 +58,19 @@
                         <span>Orders</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
-                        <li><a href="{{ route('ViewNewOrders') }}">New</a></li>
-                        <li><a href="{{ route('ViewCanceledOrders') }}">Canceled</a></li>
-                        <li><a href="{{ route('ViewShippedOrders') }}">Shipped</a></li>
-                        <li>
+                        @can('new-orders')
+                            <li><a href="{{ route('ViewNewOrders') }}">New</a></li>
+                        @endcan
+                        @can('canceled-orders')
+                            <li><a href="{{ route('ViewCanceledOrders') }}">Canceled</a></li>
+                        @endcan
+                        @can('shipped-orders')
+                            <li><a href="{{ route('ViewShippedOrders') }}">Shipped</a></li>
+                        @endcan
+                        {{-- <li>
                             <hr class="divider">
                         </li>
-                        <li><a href="{{ route('download_orders') }}" class="text-success fw-bold">Download</a></li>
+                        <li><a href="{{ route('download_orders') }}" class="text-success fw-bold">Download</a></li> --}}
                     </ul>
                 </li>
 

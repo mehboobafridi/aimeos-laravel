@@ -28,19 +28,19 @@ Route::group(['middleware' => 'check.status'], function () {
         });
 
         //show new orders
-        // Route::group(['middleware' => ['permission:all-orders']], function () {
-        Route::view('/new-orders', 'orders.new')->name('ViewNewOrders');
-        // });
+        Route::group(['middleware' => ['permission:new-orders']], function () {
+            Route::view('/new-orders', 'orders.new')->name('ViewNewOrders');
+        });
 
         //show canceled orders
-        // Route::group(['middleware' => ['permission:all-orders']], function () {
-        Route::view('/canceled-orders', 'orders.canceled')->name('ViewCanceledOrders');
-        // });
+        Route::group(['middleware' => ['permission:canceled-orders']], function () {
+            Route::view('/canceled-orders', 'orders.canceled')->name('ViewCanceledOrders');
+        });
 
         //show shipped orders
-        // Route::group(['middleware' => ['permission:all-orders']], function () {
-        Route::view('/shipped-orders', 'orders.shipped')->name('ViewShippedOrders');
-        // });
+        Route::group(['middleware' => ['permission:shipped-orders']], function () {
+            Route::view('/shipped-orders', 'orders.shipped')->name('ViewShippedOrders');
+        });
 
         //load amazon orders to datatable on orders pages views
         Route::post('get_amazon_orders', [OrdersController::class, 'load_amazon_orders'])->name('load_amazon_orders');
