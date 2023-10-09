@@ -19,33 +19,20 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+
+        // Download orders
         $schedule->call(function () {
 
             try {
                 $OrdersController = new OrdersController();
                 $request = new Request(); // Create a new Request object
-                $OrdersController->RequestReport($request);
-                
-                Log::info('RequestReport() executed successfully');
+                $OrdersController->download_orders($request);
+
+                Log::info('download_orders() executer successfully');
             } catch (\Throwable $e) {
-                Log::error('RequestReport() failed: ' . $e->getMessage());
+                Log::error('download_orders() failed: ' . $e->getMessage());
             }
-        })->everyTwoHours();
-
-
-        $schedule->call(function () {
-
-            try {
-                $OrdersController = new OrdersController();
-                $request = new Request(); // Create a new Request object
-                $OrdersController->DownloadOrders($request);
-
-                Log::info('DownloadOrders() executer successfully');
-            } catch (\Throwable $e) {
-                Log::error('DownloadOrders() failed: ' . $e->getMessage());
-            }
-        })->everyTenMinutes();
+        })->everyFifteenMinutes();
     }
 
     /**

@@ -13,7 +13,9 @@ class AmazonOrder extends Model
     protected $table = 'amazon_orders';
 
     protected $fillable = [
-        'user_id',
+        'seller_email',
+        'seller_amz_id',
+        'seller_site_code',
         'amazon_order_id',
         'trackingId',
         'carrier_code',

@@ -60,13 +60,8 @@ Route::group(['middleware' => 'check.status'], function () {
 });
 
 
-
-
-//RequestReport() is set to run after every 2 hours on scheduler
-Route::get('/request_report', [OrdersController::class, 'RequestReport'])->name('request_report');
-
-//DownloadOrders() set to run after every 10 minutes on scheduler
-Route::get('/download_orders', [OrdersController::class, 'DownloadOrders'])->name('download_orders');
+//DownloadOrders() set to run after every 15 minutes on scheduler
+Route::get('/download_orders', [OrdersController::class, 'download_orders'])->name('download_orders');
 
 
 

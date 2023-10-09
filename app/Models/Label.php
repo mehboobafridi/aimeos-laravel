@@ -12,7 +12,7 @@ class Label extends Model
     protected $table = 'labels';
 
     protected $fillable = [
-        'user_id',
+        'seller_email',
         'AmazonOrderId',
         'ShippingServiceName',
         'CarrierName',

@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use App\Models\Seller;
+use App\Models\Subscriber;
+use App\Models\Site;
 use App\Http\Controllers\HomeController;
 use SellingPartnerApi\Configuration;
 use DateTime;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+
 
 class TrackingController extends Controller
 {
@@ -17,8 +21,15 @@ class TrackingController extends Controller
     public function update_trackings($feedArray)
     {
         try {
-            // $config = $this->getAMZConfig();
-            $config = get_amazon_config();
+            $seller_email = Auth::user()->email;
+            $seller = Subscriber::where('user_id', $seller_email)->select('site_code', 'amz_seller_id')->first();
+            $amz_seller_id = $seller['amz_seller_id'];
+            $site_code = $seller['site_code'];
+
+            $config = get_amazon_config($seller_email, $amz_seller_id, $site_code);
+
+            $site_id = Site::where('site_code', $site_code)->select('site_id')->first();
+            $marketplace_id = [0 => $site_id['site_id']];
 
 
             $feedContents = $this->generateTrackingFeed_XML($feedArray, 1);
@@ -43,7 +54,7 @@ class TrackingController extends Controller
             $createFeedSpecs = [
                 'feed_type' => $feedType['name'],
                 'input_feed_document_id' => $feedDocumentId,
-                'marketplace_ids' => [config('amz.marketplaces.GB')],
+                'marketplace_ids' => $marketplace_id,
             ];
 
             $productFeed = $feedsApi->createFeed(
@@ -74,13 +85,12 @@ class TrackingController extends Controller
             $docToDownload = new \SellingPartnerApi\Document($reportDocumentInfo, $feedType);
             $buffer = $docToDownload->download();
 
-            $directory = storage_path('uploaded-tracking/');
+            $directory = storage_path('xml-responses/');
             if (!file_exists($directory)) {
                 mkdir($directory, 0777, true);
             }
-            $filePath = $directory . 'buffer_result.xml';
+            $filePath = $directory . 'tracking_result.xml';
             file_put_contents($filePath, $buffer);
-
 
             return true;
 
@@ -165,14 +175,6 @@ class TrackingController extends Controller
         return (new \DateTime($input))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
     }
 
-    // AMZ-Config
-    protected function getAMZConfig()
-    {
-        try {
-            return new Configuration(config('amz.config'));
-        } catch (\Throwable $th) {
-            return $th->getMessage();
-        }
-    }
+    
 
 }

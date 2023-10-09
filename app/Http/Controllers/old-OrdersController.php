@@ -44,9 +44,9 @@ use DateTime;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
-class OrdersController extends Controller
+class oldOrdersController extends Controller
 {
-    public function download_orders()
+    public function RequestReport()
     {
         //insert or update sellers in sellers_orders_history table if not exist
         try {
@@ -54,283 +54,154 @@ class OrdersController extends Controller
         } catch (\Throwable $th) {
             throw $th;
         }
+        $sellers = SellerOrderHistory::orderBy('last_download_date', 'asc')->get();
 
-        $seller = SellerOrderHistory::orderBy('last_download_date', 'asc')->first();
+        foreach ($sellers as $seller) {
 
-        if ($seller) {
             try {
                 $seller_email = $seller['seller_email'];
                 $seller_amz_id = $seller['seller_amz_id'];
                 $site_code = $seller['site_code'];
                 $site_id = $seller['site_id'];
 
-                $config = get_amazon_config($seller_email, $seller_amz_id, $site_code);
+                //check if the current seller's report_id is already in que to download
+                $reporst_count = ReportsHistory::where([
+                    'seller_email' => $seller_email,
+                    'seller_amz_id' => $seller_amz_id,
+                    'is_downloaded' => 0,
+                    ])->count();
+
+                if ($reporst_count > 0) {
+                    // there is already one report_id of this seller is in que to download // skip the current itearaion
+                    continue;
+                }
 
             } catch (\Throwable $th) {
                 throw $th;
             }
-        } else {
-            echo('no seller found');
-            die();
-        }
 
+            $config = get_amazon_config($seller_email, $seller_amz_id, $site_code);
 
-        $mainArray = array();
-        try {
-
-            ini_set('memory_limit', '1024M');
-            set_time_limit(0);
-
-            $lastNumDaysOrders = Carbon::now()->subDays(config('amz.feed_type.order.interval'))->format('Y-m-d\TH:i:s.u\Z');
-
-            $orderApi = new \SellingPartnerApi\Api\OrdersApi($config);
-
-            set_time_limit(1200);
-
-            $nextToken = null;
-
-            $lastRequestTime = null;
-
+            $reportApi = new \SellingPartnerApi\Api\ReportsApi($config);
+            // $marketplace_ids = [config('amz.marketplaces.GB')];
             $marketplace_ids = [0 => $site_id];
 
+            $data = [
+                'report_type' => config('amz.feed_type.order.name'),
+                'marketplace_ids' => $marketplace_ids,
+                'data_start_time' => Carbon::now()->subDays(config('amz.feed_type.order.interval'))->format('Y-m-d\TH:i:s.u\Z'),
+                'data_end_time' => validateUTC('+ 2 hours'),
+            ];
 
-            do {
-
-                try {
-
-                    // Check if enough time has passed since the last request
-                    if ($lastRequestTime !== null) {
-                        $timePassed = Carbon::now()->diffInSeconds($lastRequestTime);
-                        $timeToWait = 60 - $timePassed;
-
-                        if ($timeToWait > 0) {
-                            sleep($timeToWait);
-                        }
-                    }
-
-                    $lastRequestTime = Carbon::now();
-
-                    $orders = $orderApi->getOrders(
-                        $marketplace_ids,
-                        $lastNumDaysOrders,
-                        null,
-                        null,
-                        null,
-                        array('Unshipped', 'PartiallyShipped','Canceled','Shipped'),
-                        array('MFN'),
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        $nextToken,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        // array("buyerInfo", "shippingAddress")
-                    );
-
-                    $nextToken = $orders->getPayload()->getNextToken();
-
-                    $response_to_array = json_decode(response()->json($orders)->content(), true);
-
-                    if (isset($response_to_array) &&
-                    isset($response_to_array['payload']) &&
-                    isset($response_to_array['payload']['Orders'])) {
-                        $response_to_array = $response_to_array['payload']['Orders'];
-
-                        foreach ($response_to_array as $orderData) {
-
-                            try {
-                                $unique_fields = [
-                                    'amazon_order_id' => $orderData['AmazonOrderId'],
-                                    'seller_email' => $seller_email,
-                                    'seller_amz_id' => $seller_amz_id,
-                                    'seller_site_code' => $site_code,
-                                ];
-
-                                $order = AmazonOrder::updateOrCreate(
-                                    $unique_fields,
-                                    [
-                                        'seller_email' => $seller_email,
-                                        'seller_amz_id' => $seller_amz_id,
-                                        'seller_site_code' => $site_code,
-                                        'amazon_order_id' => $orderData['AmazonOrderId'],
-                                        'purchase_date' => $orderData['PurchaseDate'],
-                                        'last_update_date' => $orderData['LastUpdateDate'],
-                                        'order_status' => $orderData['OrderStatus'],
-                                        'fulfillment_channel' => $orderData['FulfillmentChannel'],
-                                        'sales_channel' => $orderData['SalesChannel'],
-                                        'ship_service_level' => $orderData['ShipServiceLevel'],
-                                        'order_total_currency_code' => $orderData['OrderTotal']['CurrencyCode'] ?? '',
-                                        'order_total_amount' => $orderData['OrderTotal']['Amount'] ?? '0',
-                                        'number_of_items_shipped' => $orderData['NumberOfItemsShipped'],
-                                        'number_of_items_unshipped' => $orderData['NumberOfItemsUnshipped'],
-                                        'marketplace_id' => $orderData['MarketplaceId'],
-                                        'shipment_service_level_category' => $orderData['ShipmentServiceLevelCategory'],
-                                        'order_type' => $orderData['OrderType'],
-                                        'earliest_ship_date' => $orderData['EarliestShipDate'],
-                                        'latest_ship_date' => $orderData['LatestShipDate'],
-                                        'earliest_delivery_date' => $orderData['EarliestDeliveryDate'] ?? '',
-                                        'latest_delivery_date' => $orderData['LatestDeliveryDate'] ?? '',
-                                        'is_business_order' => $orderData['IsBusinessOrder'],
-                                        'is_prime' => $orderData['IsPrime'],
-                                        'is_premium_order' => $orderData['IsPremiumOrder'],
-                                        'is_global_express_enabled' => $orderData['IsGlobalExpressEnabled'],
-                                        'is_replacement_order' => $orderData['IsReplacementOrder'],
-                                        'is_sold_by_ab' => $orderData['IsSoldByAB'],
-                                        'default_ship_from_location_address_name' => isset($orderData['DefaultShipFromLocationAddress']['Name']) ? $orderData['DefaultShipFromLocationAddress']['Name'] : '',
-                                        'default_ship_from_location_address_line_1' => isset($orderData['DefaultShipFromLocationAddress']['AddressLine1']) ? $orderData['DefaultShipFromLocationAddress']['AddressLine1'] : '',
-                                        'default_ship_from_location_city' => isset($orderData['DefaultShipFromLocationAddress']['City']) ? $orderData['DefaultShipFromLocationAddress']['City'] : '',
-                                        'default_ship_from_location_state_or_region' => isset($orderData['DefaultShipFromLocationAddress']['StateOrRegion']) ? $orderData['DefaultShipFromLocationAddress']['StateOrRegion'] : '',
-                                        'default_ship_from_location_postal_code' => isset($orderData['DefaultShipFromLocationAddress']['PostalCode']) ? $orderData['DefaultShipFromLocationAddress']['PostalCode'] : '',
-                                        'default_ship_from_location_country_code' => isset($orderData['DefaultShipFromLocationAddress']['CountryCode']) ? $orderData['DefaultShipFromLocationAddress']['CountryCode'] : '',
-                                        'default_ship_from_location_phone' => isset($orderData['DefaultShipFromLocationAddress']['Phone']) ? $orderData['DefaultShipFromLocationAddress']['Phone'] : '',
-                                        'shipping_address_name' => isset($orderData['ShippingAddress']['Name']) ? $orderData['ShippingAddress']['Name'] : '',
-                                        'shipping_address_line_1' => isset($orderData['ShippingAddress']['AddressLine1']) ? $orderData['ShippingAddress']['AddressLine1'] : '',
-                                        'shipping_address_city' => isset($orderData['ShippingAddress']['City']) ? $orderData['ShippingAddress']['City'] : '',
-                                        'shipping_address_state_or_region' => isset($orderData['ShippingAddress']['StateOrRegion']) ? $orderData['ShippingAddress']['StateOrRegion'] : '',
-                                        'shipping_address_postal_code' => isset($orderData['ShippingAddress']['PostalCode']) ? $orderData['ShippingAddress']['PostalCode'] : '',
-                                        'shipping_address_country_code' => isset($orderData['ShippingAddress']['CountryCode']) ? $orderData['ShippingAddress']['CountryCode'] : '',
-                                        'shipping_address_phone' => isset($orderData['ShippingAddress']['Phone']) ? $orderData['ShippingAddress']['Phone'] : '',
-                                        'buyer_info_buyer_email' => isset($orderData['BuyerInfo']['BuyerEmail']) ? $orderData['BuyerInfo']['BuyerEmail'] : '',
-                                        'buyer_info_buyer_name' => isset($orderData['BuyerInfo']['BuyerName']) ? $orderData['BuyerInfo']['BuyerName'] : '',
-                                        // add more fields as needed
-                                    ]
-                                );
-
-                                $this->get_order_items($unique_fields, $config);
-
-                            } catch (\Throwable $th) {
-                                throw $th;
-                            }
-                        }
-                    }
-
-                } catch (\Throwable $th) {
-                    $s = $th->getMessage();
-                    return $s;
-                }
-            } while ($nextToken != null);
-
-
-            //update the the 'last_download_date' in SellerOrderHistory table
+            $body = new \SellingPartnerApi\Model\Reports\CreateReportSpecification($data);
             try {
+                $report_id = $reportApi->createReport($body)->getReportId();
+            } catch (\Exception $th) {
+                throw $th;
+            }
+
+            if ($report_id) {
+                //store report_id in reports_histories table along with seller information
+                ReportsHistory::create([
+                    'seller_email' => $seller_email,
+                    'seller_amz_id' => $seller_amz_id,
+                    'report_id' => $report_id,
+                    'is_downloaded' => 0,
+                ]);
+
+                //update the the 'last_download_date' in SellerOrderHistory table
                 $now = now();
                 SellerOrderHistory::where([
                     'seller_email' => $seller_email,
                     'seller_amz_id' => $seller_amz_id,
                     'site_id' => $seller->site_id,
-                    ])->update(['last_download_date' => $now]);
-            } catch (\Throwable $th) {
+                ])->update(['last_download_date' => $now]);
+            }
+
+            $s = 'abc';
+        }
+
+    }
+
+    public function DownloadOrders()
+    {
+        $reports_history = ReportsHistory::where('is_downloaded', 0)->orderBy('created_at')->first();
+
+        $seller_email = $reports_history['seller_email'];
+        $seller_amz_id = $reports_history['seller_amz_id'];
+        $report_id = $reports_history['report_id'];
+
+        try {
+            $seller = SellerOrderHistory::where(['seller_email' => $seller_email, 'seller_amz_id' => $seller_amz_id])->first();
+
+            $site_code = $seller['site_code'];
+            $site_id = $seller['site_id'];
+
+            $config = get_amazon_config($seller_email, $seller_amz_id, $site_code);
+
+            $reportApi = new \SellingPartnerApi\Api\ReportsApi($config);
+
+            $marketplace_ids = [0 => $site_id];
+
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+        $report_document_id = "";
+        $counter = 0;
+        $rptPrepared = false;
+
+        try {
+            do {
+                $report = $reportApi->getReport($report_id);
+                $report_document_id = $report->getReportDocumentId();
+                $reportStatus = $report->getProcessingStatus();
+
+                if ($reportStatus == 'DONE') {
+                    $rptPrepared = true;
+                } else {
+                    $counter++;
+                    if ($counter > 30) {
+                        break;
+                    }
+                    sleep(10); // Wait for 10 seconds before checking the report status again
+                }
+            } while (!$rptPrepared);
+        } catch (\Exception $th) {
+            throw $th;
+        }
+
+        $reportType = config('amz.feed_type.order.obj');
+
+        $arr_orders_buf = array();
+        if (!empty($report_document_id)) {
+            $reportDocumentInfo = null;
+            try {
+                $reportDocumentInfo = $reportApi->getReportDocument($report_document_id, $reportType);
+                $docToDownload = new \SellingPartnerApi\Document($reportDocumentInfo, $reportType);
+                $buffer = $docToDownload->download();
+            } catch (\Exception $th) {
                 throw $th;
             }
 
-            return redirect()->route('home')->with('success', 'Orders downloaded successfully');
+            file_put_contents(storage_path() . "\\xml-responses\\orders.xml", $buffer);
+            die();
 
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
-    public function get_order_items($unique_fields, $config)
-    {
-        try {
-            $orderID = $unique_fields['amazon_order_id'];
-            $order = AmazonOrder::where('amazon_order_id', $orderID)->first();
-            if ($order->is_item_fetched == true) {
-                return;
-            }
-
-            $items = $this->getOrderItemsPrepare($orderID, $config);
-            // $items_array = array();
-
-            if(is_array($items)) {
-                //  $items_array = $items['OrderItems'];
-                $allItemsDone = true;
-                foreach ($items as $item) {
-                    try {
-                        $unique_fields['AmazonOrderItemCode'] = $item['OrderItemId'];
-
-                        $order_details = OrderDetail::updateOrCreate(
-                            $unique_fields,
-                            [
-                                'seller_email' => $unique_fields['seller_email'],
-                                'seller_amz_id' => $unique_fields['seller_amz_id'],
-                                'seller_site_code' => $unique_fields['seller_site_code'],
-                                'amazon_order_id' =>  $orderID,
-                                'AmazonOrderItemCode' => $item['OrderItemId'],
-                                'ASIN' => $item['ASIN'],
-                                'SKU' => $item['SellerSKU'],
-                                'ProductName' => $item['Title'],
-                                'ItemPrice' => $item['ItemPrice']['Amount'] ?? '0',
-                                'ItemPriceCurrencyCode' => $item['ItemPrice']['CurrencyCode'] ?? '',
-                                'ItemTaxAmount' => $item['ItemTax']['Amount'] ?? '0',
-                                'ItemTaxCurrencyCode' => $item['ItemTax']['CurrencyCode'] ?? '',
-
-                                'ShippingPrice' => $item['ShippingPrice']['Amount'] ?? '0',
-                                'ShippingPriceCurrencyCode' => $item['ShippingPrice']['CurrencyCode'] ?? '',
-
-                                'ShippingTax' => $item['ShippingTax']['Amount'] ?? '0',
-                                'ShippingTaxCurrencyCode' => $item['ShippingTax']['CurrencyCode'] ?? '',
-
-                                'PromotionDiscountAmount' => $item['PromotionDiscount']['Amount'] ?? '',
-                                'PromotionDiscountCurrencyCode' => $item['PromotionDiscount']['CurrencyCode'] ?? '',
-                                'PromotionDiscountTaxAmount' => $item['PromotionDiscountTax']['Amount'] ?? '',
-                                'PromotionDiscountTaxCurrencyCode' => $item['PromotionDiscountTax']['CurrencyCode'] ?? '',
-                                'Quantity' => $item['QuantityOrdered'],
-                                'QuantityShipped' => $item['QuantityShipped'],
-                            ]
-                        );
-
-                    } catch (\Throwable $th) {
-                        $msg = $th->getMessage();
-                        $allItemsDone = false;
-                    }
-                }
-
-                if($allItemsDone) {
-                    try {
-                        $order->update(['is_item_fetched' => true]);
-                    } catch (\Throwable $th) {
-                        $msg = $th->getMessage();
-                    }
+            try {
+                $xml_buf = simplexml_load_string($buffer);
+                $json_buf = json_encode($xml_buf);
+                $arr_orders_buf = json_decode($json_buf, true);
+                $orders = isset($arr_orders_buf['Message']) ? $arr_orders_buf['Message'] : [];
+                // AmazonShippedOrder::truncate();
+                foreach (array_chunk($orders, 30) as $chunk) {
+                    $this->insert_orders_to_database($chunk, $seller_email, $seller_amz_id, $site_code);
+                } catch (\Throwable $th) {
+                    throw $th;
                 }
             }
-        } catch (\Throwable $th) {
-            $msg = $th->getMessage();
-            return $msg;
-        }
-    }
-
-    public function getOrderItemsPrepare($order_id, $config = null)
-    {
-
-        try {
-
-            if (isset($order_id) && (strlen($order_id) > 5)) {
-
-                $orderApi = new \SellingPartnerApi\Api\OrdersApi($config);
-
-                $order_items = $orderApi->getOrderItems($order_id);
-                $response_to_array = json_decode(response()->json($order_items)->content(), true);
-
-
-                $items = $response_to_array['payload'];
-                if(is_array($items) && isset($items['OrderItems'])) {
-                    return $items['OrderItems'];
-                } else {
-                    return false;
-                }
-
-            }
-
-        } catch (\Throwable $th) {
-            throw $th;
         }
 
+        return redirect()->route('home')->with('success', 'Shipped and Unshipped orders comparison operation succeeded');
     }
 
     public function set_sellers_orders_history()
@@ -347,7 +218,7 @@ class OrdersController extends Controller
 
             // dd($sellers);
 
-            // $currentdate = now();
+            $currentdate = now();
             foreach ($sellers as $seller) {
                 DB::connection()->enableQueryLog();
 
@@ -378,12 +249,338 @@ class OrdersController extends Controller
 
     }
 
+    public function insert_orders_to_database($orders, $seller_email, $seller_amz_id)
+    {
+
+        foreach ($orders as $item) {
+            
+            $order = $item['Order'] ?? '';
+            
+            $orders_array = [
+                'AmazonOrderID' => $order['AmazonOrderID'] ?? '',
+                'PurchaseDate' => substr($order['PurchaseDate'] ?? date('Y-m-i'), 0, 10),
+                'MerchantOrderID' => $order['MerchantOrderID'] ?? '',
+                'LastUpdatedDate' => substr($order['LastUpdatedDate'] ?? date('Y-m-i'), 0, 10),
+                'OrderStatus' => $order['OrderStatus'] ?? '',
+                'SalesChannel' => $order['SalesChannel'] ?? '',
+                'FulfillmentChannel' => $order['FulfillmentData']['FulfillmentChannel'] ?? '',
+                'ShipServiceLevel' => $order['FulfillmentData']['ShipServiceLevel'] ?? '',
+                'City' => $order['Address']['FulfillmentData']['City'] ?? '',
+                'State' => $order['Address']['FulfillmentData']['State'] ?? '',
+                'PostalCode' => $order['Address']['FulfillmentData']['PostalCode'] ?? '',
+                'Country' => $order['Address']['FulfillmentData']['Country'] ?? '',
+                'IsBusinessOrder' => $order['IsBusinessOrder'] ?? '',
+                'AddressType' => $order['AddressType'] ?? '',
+            ];
+
+
+            $orderItems = $order['OrderItem'] ?? '';
+
+            // Check if 'OrderItem' key exists in $order
+            if (isset($order['OrderItem'])) {
+                $orderItems = $order['OrderItem'];
+
+                // Create an array to store all order items
+                $all_order_items = [];
+
+                // Loop through each order item
+                foreach ($orderItems as $orderItem) {
+                    $order_item_array = [
+                        'AmazonOrderItemCode' => $orderItem['AmazonOrderItemCode'] ?? '',
+                        'ASIN' => $orderItem['ASIN'] ?? '',
+                        'SKU' => $orderItem['SKU'] ?? '-',
+                        'ItemStatus' => $orderItem['ItemStatus'] ?? '',
+                        'ProductName' => $orderItem['ProductName'] ?? '',
+                        // 'Quantity' => $orderItem['Quantity'] ?? '',
+                        // 'Promotion' => $orderItem['Promotion'] ?? '',
+                        // 'Price' => $orderItem['ItemPrice']['Amount'] ?? '',
+                        // 'currency' => $orderItem['ItemPrice']['currency'] ?? '',
+                        // 'Type' => $orderItem['ItemPrice']['Type'] ?? '',
+
+                        
+                        'ItemPrice' => $orderItem['ItemPrice']['Amount'] ?? '0',
+                        'ItemPriceCurrencyCode' => $orderItem['ItemPrice']['CurrencyCode'] ?? '',
+                        'ItemTaxAmount' => $orderItem['ItemTax']['Amount'] ?? '0',
+                        'ItemTaxCurrencyCode' => $orderItem['ItemTax']['CurrencyCode'] ?? '',
+
+                        'ShippingPrice' => $orderItem['ShippingPrice']['Amount'] ?? '0',
+                        'ShippingPriceCurrencyCode' => $orderItem['ShippingPrice']['CurrencyCode'] ?? '',
+
+                        'ShippingTax' => $orderItem['ShippingTax']['Amount'] ?? '0',
+                        'ShippingTaxCurrencyCode' => $orderItem['ShippingTax']['CurrencyCode'] ?? '',
+
+                        'PromotionDiscountAmount' => $orderItem['PromotionDiscount']['Amount'] ?? '',
+                        'PromotionDiscountCurrencyCode' => $orderItem['PromotionDiscount']['CurrencyCode'] ?? '',
+                        'PromotionDiscountTaxAmount' => $orderItem['PromotionDiscountTax']['Amount'] ?? '',
+                        'PromotionDiscountTaxCurrencyCode' => $orderItem['PromotionDiscountTax']['CurrencyCode'] ?? '',
+                        'Quantity' => $orderItem['QuantityOrdered'],
+                        'QuantityShipped' => $orderItem['QuantityShipped'],
+                    ];
+
+                    // Add the order item to the array of all order items
+                    $all_order_items[] = $order_item_array;
+                }
+            }
+
+        }
+
+
+        $database_array[] = $market_order_item_db;
+
+        $order = AmazonOrder::updateOrCreate(['amazon_order_id' => $orderData['AmazonOrderId'], 'user_id' => $user_id], [$market_order_item_db]);
+        $order = AmazonOrder::updateOrCreate(
+            ['amazon_order_id' => $orderData['AmazonOrderId'], 'user_id' => $user_id],
+            $market_order_item_db
+        );
+
+
+    }
+
+    // public function download_orders()
+    // {
+    //     $mainArray = array();
+    //     try {
+
+    //         $user_id = Auth::user()->id;
+
+    //         ini_set('memory_limit', '1024M');
+    //         set_time_limit(0);
+
+    //         $config = get_amazon_config();
+
+    //         $lastNumDaysOrders = Carbon::now()->subDays(config('amz.feed_type.order.interval'))->format('Y-m-d\TH:i:s.u\Z');
+
+    //         $orderApi = new \SellingPartnerApi\Api\OrdersApi($config);
+
+    //         set_time_limit(1200);
+
+    //         $nextToken = null;
+
+    //         $lastRequestTime = null;
+
+    //         do {
+
+    //             try {
+
+    //                 // Check if enough time has passed since the last request
+    //                 if ($lastRequestTime !== null) {
+    //                     $timePassed = Carbon::now()->diffInSeconds($lastRequestTime);
+    //                     $timeToWait = 60 - $timePassed;
+
+    //                     if ($timeToWait > 0) {
+    //                         sleep($timeToWait);
+    //                     }
+    //                 }
+
+    //                 $lastRequestTime = Carbon::now();
+
+    //                 $orders = $orderApi->getOrders(
+    //                     array(config('amz.marketplaces.GB')),
+    //                     $lastNumDaysOrders,
+    //                     null,
+    //                     null,
+    //                     null,
+    //                     array('Unshipped', 'PartiallyShipped','Canceled','Shipped'),
+    //                     array('MFN'),
+    //                     null,
+    //                     null,
+    //                     null,
+    //                     null,
+    //                     null,
+    //                     $nextToken,
+    //                     null,
+    //                     null,
+    //                     null,
+    //                     null,
+    //                     null,
+    //                     // array("buyerInfo", "shippingAddress")
+    //                 );
+
+
+    //                 $nextToken = $orders->getPayload()->getNextToken();
+
+    //                 $response_to_array = json_decode(response()->json($orders)->content(), true);
+
+    //                 if (isset($response_to_array) &&
+    //                 isset($response_to_array['payload']) &&
+    //                 isset($response_to_array['payload']['Orders'])) {
+    //                     $response_to_array = $response_to_array['payload']['Orders'];
+
+    //                     foreach ($response_to_array as $orderData) {
+
+    //                         try {
+    //                             // $order = AmazonOrder::updateOrCreate(['amazon_order_id' => $orderData['AmazonOrderId']], [
+    //                             $order = AmazonOrder::updateOrCreate(['amazon_order_id' => $orderData['AmazonOrderId'], 'user_id' => $user_id], [
+    //                                 'user_id' => $user_id,
+    //                                 'amazon_order_id' => $orderData['AmazonOrderId'],
+    //                                 'purchase_date' => $orderData['PurchaseDate'],
+    //                                 'last_update_date' => $orderData['LastUpdateDate'],
+    //                                 'order_status' => $orderData['OrderStatus'],
+    //                                 'fulfillment_channel' => $orderData['FulfillmentChannel'],
+    //                                 'sales_channel' => $orderData['SalesChannel'],
+    //                                 'ship_service_level' => $orderData['ShipServiceLevel'],
+    //                                 'order_total_currency_code' => $orderData['OrderTotal']['CurrencyCode'] ?? '',
+    //                                 'order_total_amount' => $orderData['OrderTotal']['Amount'] ?? '0',
+    //                                 'number_of_items_shipped' => $orderData['NumberOfItemsShipped'],
+    //                                 'number_of_items_unshipped' => $orderData['NumberOfItemsUnshipped'],
+    //                                 'marketplace_id' => $orderData['MarketplaceId'],
+    //                                 'shipment_service_level_category' => $orderData['ShipmentServiceLevelCategory'],
+    //                                 'order_type' => $orderData['OrderType'],
+    //                                 'earliest_ship_date' => $orderData['EarliestShipDate'],
+    //                                 'latest_ship_date' => $orderData['LatestShipDate'],
+    //                                 'earliest_delivery_date' => $orderData['EarliestDeliveryDate'] ?? '',
+    //                                 'latest_delivery_date' => $orderData['LatestDeliveryDate'] ?? '',
+    //                                 'is_business_order' => $orderData['IsBusinessOrder'],
+    //                                 'is_prime' => $orderData['IsPrime'],
+    //                                 'is_premium_order' => $orderData['IsPremiumOrder'],
+    //                                 'is_global_express_enabled' => $orderData['IsGlobalExpressEnabled'],
+    //                                 'is_replacement_order' => $orderData['IsReplacementOrder'],
+    //                                 'is_sold_by_ab' => $orderData['IsSoldByAB'],
+    //                                 'default_ship_from_location_address_name' => isset($orderData['DefaultShipFromLocationAddress']['Name']) ? $orderData['DefaultShipFromLocationAddress']['Name'] : '',
+    //                                 'default_ship_from_location_address_line_1' => isset($orderData['DefaultShipFromLocationAddress']['AddressLine1']) ? $orderData['DefaultShipFromLocationAddress']['AddressLine1'] : '',
+    //                                 'default_ship_from_location_city' => isset($orderData['DefaultShipFromLocationAddress']['City']) ? $orderData['DefaultShipFromLocationAddress']['City'] : '',
+    //                                 'default_ship_from_location_state_or_region' => isset($orderData['DefaultShipFromLocationAddress']['StateOrRegion']) ? $orderData['DefaultShipFromLocationAddress']['StateOrRegion'] : '',
+    //                                 'default_ship_from_location_postal_code' => isset($orderData['DefaultShipFromLocationAddress']['PostalCode']) ? $orderData['DefaultShipFromLocationAddress']['PostalCode'] : '',
+    //                                 'default_ship_from_location_country_code' => isset($orderData['DefaultShipFromLocationAddress']['CountryCode']) ? $orderData['DefaultShipFromLocationAddress']['CountryCode'] : '',
+    //                                 'default_ship_from_location_phone' => isset($orderData['DefaultShipFromLocationAddress']['Phone']) ? $orderData['DefaultShipFromLocationAddress']['Phone'] : '',
+    //                                 'shipping_address_name' => isset($orderData['ShippingAddress']['Name']) ? $orderData['ShippingAddress']['Name'] : '',
+    //                                 'shipping_address_line_1' => isset($orderData['ShippingAddress']['AddressLine1']) ? $orderData['ShippingAddress']['AddressLine1'] : '',
+    //                                 'shipping_address_city' => isset($orderData['ShippingAddress']['City']) ? $orderData['ShippingAddress']['City'] : '',
+    //                                 'shipping_address_state_or_region' => isset($orderData['ShippingAddress']['StateOrRegion']) ? $orderData['ShippingAddress']['StateOrRegion'] : '',
+    //                                 'shipping_address_postal_code' => isset($orderData['ShippingAddress']['PostalCode']) ? $orderData['ShippingAddress']['PostalCode'] : '',
+    //                                 'shipping_address_country_code' => isset($orderData['ShippingAddress']['CountryCode']) ? $orderData['ShippingAddress']['CountryCode'] : '',
+    //                                 'shipping_address_phone' => isset($orderData['ShippingAddress']['Phone']) ? $orderData['ShippingAddress']['Phone'] : '',
+    //                                 'buyer_info_buyer_email' => isset($orderData['BuyerInfo']['BuyerEmail']) ? $orderData['BuyerInfo']['BuyerEmail'] : '',
+    //                                 'buyer_info_buyer_name' => isset($orderData['BuyerInfo']['BuyerName']) ? $orderData['BuyerInfo']['BuyerName'] : '',
+    //                                 // add more fields as needed
+    //                             ]);
+
+    //                             $this->get_order_items($orderData['AmazonOrderId'], $config);
+
+    //                         } catch (\Throwable $th) {
+    //                             throw $th;
+    //                         }
+
+    //                     }
+    //                 }
+
+    //             } catch (\Throwable $th) {
+    //                 $s = $th->getMessage();
+    //                 return $s;
+    //             }
+    //         } while ($nextToken != null);
+
+
+
+    //         return redirect()->route('home')->with('success', 'Orders downloaded successfully');
+
+
+
+    //     } catch (\Throwable $th) {
+    //         throw $th;
+    //     }
+    // }
+
+    // public function get_order_items($orderID, $config)
+    // {
+    //     try {
+    //         $order = AmazonOrder::where('amazon_order_id', $orderID)->first();
+    //         if ($order->is_item_fetched == true) {
+    //             return;
+    //         }
+
+    //         $items = $this->getOrderItemsPrepare($orderID, $config);
+    //         // $items_array = array();
+
+    //         if(is_array($items)) {
+    //             //  $items_array = $items['OrderItems'];
+    //             $allItemsDone = true;
+    //             foreach ($items as $item) {
+    //                 try {
+    //                     $order_details = OrderDetail::updateOrCreate(
+    //                         ['amazon_order_id' => $orderID,
+    //                         'AmazonOrderItemCode' => $item['OrderItemId']],
+    //                         [
+    //                         'amazon_order_id' =>  $orderID,
+    //                         'AmazonOrderItemCode' => $item['OrderItemId'],
+    //                         'ASIN' => $item['ASIN'],
+    //                         'SKU' => $item['SellerSKU'],
+    //                         'ProductName' => $item['Title'],
+    //                         'ItemPrice' => $item['ItemPrice']['Amount'] ?? '0',
+    //                         'ItemPriceCurrencyCode' => $item['ItemPrice']['CurrencyCode'] ?? '',
+    //                         'ItemTaxAmount' => $item['ItemTax']['Amount'] ?? '0',
+    //                         'ItemTaxCurrencyCode' => $item['ItemTax']['CurrencyCode'] ?? '',
+
+    //                         'ShippingPrice' => $item['ShippingPrice']['Amount'] ?? '0',
+    //                         'ShippingPriceCurrencyCode' => $item['ShippingPrice']['CurrencyCode'] ?? '',
+
+    //                         'ShippingTax' => $item['ShippingTax']['Amount'] ?? '0',
+    //                         'ShippingTaxCurrencyCode' => $item['ShippingTax']['CurrencyCode'] ?? '',
+
+    //                         'PromotionDiscountAmount' => $item['PromotionDiscount']['Amount'] ?? '',
+    //                         'PromotionDiscountCurrencyCode' => $item['PromotionDiscount']['CurrencyCode'] ?? '',
+    //                         'PromotionDiscountTaxAmount' => $item['PromotionDiscountTax']['Amount'] ?? '',
+    //                         'PromotionDiscountTaxCurrencyCode' => $item['PromotionDiscountTax']['CurrencyCode'] ?? '',
+    //                         'Quantity' => $item['QuantityOrdered'],
+    //                         'QuantityShipped' => $item['QuantityShipped'],
+    //                         ]
+    //                     );
+
+    //                 } catch (\Throwable $th) {
+    //                     $msg = $th->getMessage();
+    //                     $allItemsDone = false;
+    //                 }
+    //             }
+
+    //             if($allItemsDone) {
+    //                 try {
+    //                     $order->update(['is_item_fetched' => true]);
+    //                 } catch (\Throwable $th) {
+    //                     $msg = $th->getMessage();
+
+    //                 }
+    //             }
+    //         }
+    //     } catch (\Throwable $th) {
+    //         $msg = $th->getMessage();
+    //         return $msg;
+    //     }
+    // }
+
+    // public function getOrderItemsPrepare($order_id, $config = null)
+    // {
+
+    //     try {
+
+    //         if (isset($order_id) && (strlen($order_id) > 5)) {
+
+    //             $orderApi = new \SellingPartnerApi\Api\OrdersApi($config);
+
+    //             $order_items = $orderApi->getOrderItems($order_id);
+    //             $response_to_array = json_decode(response()->json($order_items)->content(), true);
+
+
+    //             $items = $response_to_array['payload'];
+    //             if(is_array($items) && isset($items['OrderItems'])) {
+    //                 return $items['OrderItems'];
+    //             } else {
+    //                 return false;
+    //             }
+
+    //         }
+
+    //     } catch (\Throwable $th) {
+    //         throw $th;
+    //     }
+
+    // }
+
 
     // LOAD AMAZON ORDERS TO VIEWS ON DATATABLES
     public function load_amazon_orders(Request $request)
     {
         try {
-            $seller_email = Auth::user()->email;
+            $user_id = Auth::user()->id;
 
             $totalFilteredRecord = $totalDataRecord = $draw_val = "";
 
@@ -396,14 +593,14 @@ class OrdersController extends Controller
 
             if($page_order_status == 'Shipped') {
                 //shipped-orders
-                $whereStatment = '(amazon_orders.order_status="Shipped" AND amazon_orders.seller_email = "' . $seller_email . '")';
+                $whereStatment = '(amazon_orders.order_status="Shipped" AND amazon_orders.user_id = "' . $user_id . '")';
             } elseif($page_order_status == 'Canceled') {
                 //canceled-orders
-                $whereStatment = '(amazon_orders.order_status="Canceled" OR amazon_orders.is_cancellation_requested="1" AND amazon_orders.order_status != "Unshipped" AND amazon_orders.order_status != "PartiallyShipped" AND amazon_orders.order_status != "Shipped"  AND amazon_orders.seller_email = "' . $seller_email . '")';
+                $whereStatment = '(amazon_orders.order_status="Canceled" OR amazon_orders.is_cancellation_requested="1" AND amazon_orders.order_status != "Unshipped" AND amazon_orders.order_status != "PartiallyShipped" AND amazon_orders.order_status != "Shipped"  AND amazon_orders.user_id = "' . $user_id . '")';
             } elseif($page_order_status == 'Unshipped') {
                 try {
                     // $whereStatment = "(amazon_orders.order_status='Unshipped') OR amazon_orders.order_status='PartiallyShipped' ";
-                    $whereStatment = '(amazon_orders.order_status="Unshipped" OR amazon_orders.order_status="PartiallyShipped") AND (amazon_orders.seller_email = "' . $seller_email . '")';
+                    $whereStatment = '(amazon_orders.order_status="Unshipped" OR amazon_orders.order_status="PartiallyShipped") AND (amazon_orders.user_id = "' . $user_id . '")';
 
                 } catch (\Throwable $th) {
                     throw $th;
@@ -749,7 +946,7 @@ class OrdersController extends Controller
 
     public function mark_order_shipped(Request $request)
     {
-        $seller_email = Auth::user()->email;
+        $user_id = Auth::user()->id;
         $amazonOrderId = $request->input('order_id');
         $shipDate = Carbon::parse($request->input('shipDate_ml'))->format('Y-m-d H:i:s');
         $CarrierCode = $request->input('CarrierName');
@@ -761,12 +958,16 @@ class OrdersController extends Controller
             $TrackingController = new TrackingController();
             $updateTracking = $TrackingController->update_trackings($feedArray);
             if ($updateTracking !== true) {
-                
+                // return response()->json([
+                //     'message' => 'Order marked as shipped and Tracking Uploaded successfully'
+                // ]);
+                // } else {
                 return response()->json([
                     'error' => $updateTracking
                 ]);
             }
         } catch (\Throwable $th) {
+            // throw $th;
             return response()->json([
                 'error' => $th->getMessage()
             ]);
@@ -792,7 +993,7 @@ class OrdersController extends Controller
 
         try {
             $data = [
-                'seller_email' => $seller_email,
+                'user_id' => $user_id,
                 'AmazonOrderId' => $amazonOrderId,
                 'ShipDate' => $shipDate,
                 'ShippingServiceId' => $request->input('ShippingServiceId_ml'),

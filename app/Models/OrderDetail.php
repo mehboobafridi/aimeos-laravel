@@ -11,6 +11,9 @@ class OrderDetail extends Model
     use HasFactory;
 
     protected $fillable = [
+        'seller_email',
+        'seller_amz_id',
+        'seller_site_code',
         'amazon_order_id',
         'AmazonOrderItemCode',
         'ASIN',
