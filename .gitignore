@@ -27,3 +27,6 @@ Homestead.json
 bootstrap/cache/*
 
 storage/xml-responses
+
+*.zip
+*.rar
