@@ -1,0 +1,170 @@
+.dt-buttons {
+    margin-bottom: 0;
+}
+
+.left-col {
+    float: left;
+    width: 25%;
+}
+
+.center-col {
+    float: left;
+    width: 50%;
+}
+
+.right-col {
+    float: left;
+    width: 25%;
+}
+
+.text-bold {
+    /* font-weight: bold !important; */
+    font-weight: 600 !important;
+}
+
+.order-detail-parent {
+    background-color: #f2f2f2;
+    border: 1px solid #e0e0e0;
+    font-size: 13px;
+    padding: 10px;
+    margin: 1px;
+}
+
+#loading {
+    display: none;
+}
+
+.order-details table {
+    width: 100%;
+}
+
+.order-details th,
+.order-details td {
+    padding: 5px;
+    text-align: left;
+}
+
+.order-details thead th {
+    font-weight: bold;
+}
+
+#radio-container {
+    overflow-y: auto;
+    max-height: 200px;
+    font-size: 12px !important;
+    color: #3283d6;
+}
+
+#radio-container input[type="radio"] {
+    margin-right: 5px;
+}
+
+table.table-order td,
+table.table-order th {
+    padding: 2px 4px !important;
+    font-size: 12px !important;
+    border: none !important;
+}
+
+table.table-order th {
+    font-weight: bold !important;
+    color: #000 !important;
+}
+
+.custom-select {
+    border: 1px solid #ddd;
+    border-radius: 5;
+    height: 35px;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.underline-divider::after {
+    content: "";
+    display: block;
+    height: 1px;
+    width: 100%;
+    background-color: #000;
+    margin-top: 5px;
+}
+
+/* Hide the number input arrow buttons on Chrome, Safari, and newer Edge */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hide the number input arrow buttons on Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Custom CSS to fix select width */
+.customized-select {
+    width: 180px !important;
+    /* Set the desired width for the select input */
+}
+
+/* Allow dropdown options to adjust based on content */
+.customized-select option {
+    width: auto !important;
+    /* Important to override Bootstrap styles */
+    white-space: nowrap;
+    /* Prevent options from wrapping */
+}
+
+.operators-select {
+    width: 110 !important;
+}
+
+.operators-select option {
+    width: auto !important;
+    white-space: nowrap;
+}
+
+.link-button {
+    padding: 0;
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+}
+
+.link-button:hover {
+    color: #8b4513;
+}
+
+.custom-tables td{
+    padding: 0.2rem 0.75rem !important;
+    font-size: 0.75rem !important;
+}
+
+@media (min-width: 992px) {
+    .modal-xl {
+      max-width: 95% !important;
+    }
+  }
+  
+  @media (min-width: 1200px) {
+    .modal-xl {
+      max-width: 90% !important;
+    }
+  }
+  
+  @media (min-width: 1500px) {
+    .modal-xl {
+      max-width: 85% !important;
+    }
+  }

@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 /.gitattributes export-ignore
 /.github export-ignore
 /.gitignore export-ignore
 /build.xml export-ignore
 /phpunit.xml export-ignore
 /tests export-ignore
+=======
+# Auto detect text files and perform LF normalization
+* text=auto
+>>>>>>> amazon-saas/main

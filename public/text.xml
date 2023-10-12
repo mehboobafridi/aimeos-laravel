@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<root>
+  <setShipmentRequestDetails>
+    <sellingPartnerId>ALL7DYOJ1G2QC</sellingPartnerId>
+    <setAmazonOrderId>114-8703107-2568256</setAmazonOrderId>
+    <setItemList>
+      <item>
+        <order_item_id>00517905273882</order_item_id>
+        <quantity>1</quantity>
+      </item>
+    </setItemList>
+    <setShipFromAddress>
+      <name>PECATA ENTERPRISES</name>
+      <address_line1>18 MARKET ST</address_line1>
+      <district_or_county>US</district_or_county>
+      <email>support@webrater.net</email>
+      <city>PATERSON</city>
+      <state_or_province_code>NJ</state_or_province_code>
+      <postal_code>07501</postal_code>
+      <country_code>US</country_code>
+      <phone>9735235866</phone>
+    </setShipFromAddress>
+    <setPackageDimensions>
+      <length>1</length>
+      <width>1</width>
+      <height>1</height>
+      <unit>inches</unit>
+    </setPackageDimensions>
+    <setWeight>
+      <value>16</value>
+      <unit>oz</unit>
+    </setWeight>
+    <setShippingServiceOptions>
+      <setDeliveryExperience>DeliveryConfirmationWithoutSignature</setDeliveryExperience>
+      <setCarrierWillPickUp>false</setCarrierWillPickUp>
+      <setLabelFormat>PNG</setLabelFormat>
+    </setShippingServiceOptions>
+  </setShipmentRequestDetails>
+  <setShippingServiceId>UPS_PTP_GND</setShippingServiceId>
+</root>

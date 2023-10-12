@@ -1,0 +1,81 @@
+.datepicker table tr td.active.active,
+.datepicker table tr td.active.highlighted.active,
+.datepicker table tr td.active.highlighted:active,
+.datepicker table tr td.active:active {
+    color: #fff !important;
+    background-color: #286090;
+    border-color: #204d74;
+    border-radius: 50%;
+}
+
+.datepicker table tr td.today.active,
+.datepicker table tr td.today:active {
+    color: #000;
+    background-color: #ffc966;
+    border-color: #f59e00;
+}
+
+.datepicker table tr td.today.active,
+.datepicker table tr td.today:active {
+    color: #000;
+    background-color: #ffc966;
+    border-color: #f59e00;
+}
+
+.datepicker .table-condensed > tbody > tr > td {
+    padding: 7px 3px;
+    font-size: 14px;
+}
+
+.datepicker table tr td.today {
+    border-radius: 50%;
+}
+
+.dt-buttons {
+    margin-bottom: 1.2rem;
+}
+
+.btn-sm-c {
+    padding: 0 0.1rem;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+@media (max-width: 575.98px) {
+    .table_px {
+        padding-left: 3px;
+        padding-right: 3px;
+    }
+}
+
+.datepicker {
+    z-index: 1600 !important;
+    /* has to be larger than 1050 */
+    border: 1px solid #ced4da !important;
+}
+
+.table-primary,
+.table-primary > th,
+.table-primary > td {
+    background-color: #f8f9fa;
+}
+
+.table-primary th,
+.table-primary td,
+.table-primary thead th,
+.table-primary tbody + tbody {
+    border-color: #eff2f7;
+}
+
+.modal {
+    z-index: 1600 !important;
+}
+.forever {
+    display: inline-block !important;
+}
+@media (max-width: 575.98px) {
+    .page-content {
+        padding: 70px 0;
+    }
+}

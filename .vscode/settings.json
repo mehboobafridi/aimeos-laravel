@@ -1,0 +1,17 @@
+{
+    "code-runner.runInTerminal": true,
+    
+"workbench.colorCustomizations": {
+    "editor.selectionBackground": "#135564",
+    "editor.selectionHighlightBackground": "#eeededd5",
+	"editorBracketMatch.background":"#c42210",
+	"editorBracketMatch.border":"#bcecde",
+	"editor.findMatchBackground":"#af6215",
+	"editor.findMatchHighlightBackground":"#16cf0c70",
+    "editorCursor.foreground": "#ffff00",
+    "terminalCursor.foreground": "#ffff00"
+	
+}
+}
+
+

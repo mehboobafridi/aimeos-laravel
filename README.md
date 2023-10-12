@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <a href="https://aimeos.org/">
     <img src="https://aimeos.org/fileadmin/template/icons/logo.png" alt="Aimeos logo" title="Aimeos" align="right" height="60" />
 </a>
@@ -411,3 +412,7 @@ is available for free.
 * [Issue tracker](https://github.com/aimeos/aimeos-laravel/issues)
 * [Composer packages](https://packagist.org/packages/aimeos/aimeos-laravel)
 * [Source code](https://github.com/aimeos/aimeos-laravel)
+=======
+# amazon-saas
+ 
+>>>>>>> amazon-saas/main
