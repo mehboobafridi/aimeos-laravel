@@ -1,16 +1,14 @@
-<<<<<<< HEAD
 /vendor
 composer.lock
 .phpunit.result.cache
 .phpunit.cache
 .idea/
 node_modules
-=======
 /vendor/
 node_modules/
 npm-debug.log
 yarn-error.log
-
+/.vscode/*
 # Laravel 4 specific
 bootstrap/compiled.php
 app/storage/
@@ -38,4 +36,3 @@ storage/xml-responses
 
 *.zip
 *.rar
->>>>>>> amazon-saas/main
