@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\Auth\UsersManagmentController;
+use App\Http\Controllers\GetCategoryController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\OrdersController;
 
@@ -53,8 +54,16 @@ Route::group(['middleware' => 'check.status'], function () {
         Route::post('/mark_order_shipped', [OrdersController::class, 'mark_order_shipped'])->name('mark_order_shipped');
 
 
+        //get product defination
+        Route::get('/get-defination', [HomeController::class,'getListingsEssentials'])->name('get.def');
+        
+
+        //get product defination
+        Route::get('/get-category', [GetCategoryController::class,'getCategory'])->name('get.cat');
+        
 
 
+        
 
     });
 });
